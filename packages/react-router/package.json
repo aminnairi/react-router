@@ -1,0 +1,28 @@
+{
+  "type": "module",
+  "name": "@aminnairi/react-router",
+  "description": "Type-safe router for the React library",
+  "version": "0.1.0",
+  "homepage": "https://github.com/aminnairi/react-router#readme",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/aminnairi/react-router/issues"
+  },
+  "author": {
+    "name": "Amin NAIRI",
+    "url": "https://github.com/aminnairi"
+  },
+  "repository": {
+    "url": "git+https://github.com/aminnairi/react-router.git"
+  },
+  "keywords": [
+    "react",
+    "router",
+    "hook",
+    "typescript",
+    "transition"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0"
+  }
+}
