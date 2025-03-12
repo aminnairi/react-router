@@ -634,3 +634,38 @@ Never fear having a blank page again when a component throws. This library lets 
 ## License
 
 See [`LICENSE`](./LICENSE).
+
+## Changelogs
+
+### Versions
+
+- [`0.1.1`](#011)
+- [`0.1.0`](#010)
+
+### 0.1.1
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+None.
+
+#### Bug & security fixes
+
+Fixed peer dependency for react.
+
+### 0.1.0
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+None.
+
+#### Bug & security fixes
+
+None.
