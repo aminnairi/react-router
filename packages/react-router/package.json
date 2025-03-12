@@ -2,7 +2,7 @@
   "type": "module",
   "name": "@aminnairi/react-router",
   "description": "Type-safe router for the React library",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "homepage": "https://github.com/aminnairi/react-router#readme",
   "license": "MIT",
   "bugs": {
