@@ -27,6 +27,7 @@ export interface Page<Path extends string> {
 
 export interface CreateRouterOptions<Path extends string> {
   transition?: boolean,
+  prefix?: string,
   pages: Array<Page<Path>>
   fallback: FunctionComponent
   issue: FunctionComponent<IssueProps>
@@ -154,6 +155,7 @@ export const createIssue = (issue: FunctionComponent<IssueProps>) => {
     const [page, setPage] = useState(findPage({ pages }));
     const shouldTransitionBetweenPages = useMemo(() => typeof document.startViewTransition === "function" && withViewTransition ? true : false, [withViewTransition]);
     const Fallback = useMemo(() => fallback, []);
+  prefix: string,
 
     const parameters = useMemo(() => {
       if (page) {
@@ -162,6 +164,7 @@ export const createIssue = (issue: FunctionComponent<IssueProps>) => {
           route: window.location.pathname
         })
       }
+  prefix: "",
 
       return {};
     }, [page]);
