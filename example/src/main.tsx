@@ -6,9 +6,12 @@ import '@fontsource/roboto/700.css';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import { router } from './router';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <router.Provider>
+      <App />
+    </router.Provider>
   </React.StrictMode>,
 )
