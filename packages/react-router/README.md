@@ -976,8 +976,27 @@ See [`LICENSE`](./LICENSE).
 
 ### Versions
 
+- [`1.0.0`](#100)
 - [`0.1.1`](#011)
 - [`0.1.0`](#010)
+
+### 1.0.0
+
+#### Major changes
+
+- The arguments of `findPage` have moved from an object to regular arguments, with the first one being the path, and the second being the current route
+- Removed the `page.navigate` property in favor of the new `useNavigateTo` hook
+- The `createPage` now returns the page directly instead of exposing it in an object
+
+#### Minor changes
+
+- Added a `Provider` component from the created `router` which exposes variables for the children such as the location
+- Added a new `useIsActivePage` hook for the created `router` which helps computing if a given page is active or not
+- Added a new `useSearch` hook for the created `router` for getting search parameters from the current URL
+- Added a new `useHash` hook for the created `router` for getting the URL fragment
+- Added a new `sanitizePath` function for removing unecessary and extra slashes in a given string
+- Added a new `useNavigateTo` hook that replaces the old `page.navigate` function
+- Added a `prefix` property in order to use prefix for routes that need it like GitHub Pages
 
 ### 0.1.1
 
