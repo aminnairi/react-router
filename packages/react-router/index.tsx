@@ -62,9 +62,9 @@ export const createPage = <Path extends string>(page: Page<Path>): CreateRouteOu
   };
 }
 
-export const doesRouteMatchPath = (path: string, route: string): boolean => {
-  const pathParts = path.split("/").filter(Boolean);
-  const routeParts = route.split("/").filter(Boolean);
+export const doesRouteMatchPath = (path: string, route: string, prefix?: string): boolean => {
+  const pathParts = sanitizePath(`${prefix ?? ""}/${path}`).split("/").filter(Boolean);
+  const routeParts = sanitizePath(route).split("/").filter(Boolean);
 
   return (
     pathParts.length === routeParts.length &&
@@ -83,7 +83,7 @@ export const getParameters = <Path extends string>(config: { path: Path; route: 
 
 const findPage = ({ pages }: FindPageOptions) => {
   const foundPage = pages.find(route => {
-    return doesRouteMatchPath(route.path, window.location.pathname);
+    return doesRouteMatchPath(sanitizePath(`${prefix ?? ""}/${route.path}`), sanitizePath(path));
   });
 
   return foundPage;
