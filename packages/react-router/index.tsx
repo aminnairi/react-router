@@ -25,7 +25,7 @@ export interface Page<Path extends string> {
   element: FunctionComponent<PageComponentProps<Path>>
 }
 
-export interface CreateRouterOptions {
+export interface CreateRouterOptions<Path extends string> {
   transition?: boolean,
   pages: Array<Page<string>>
   fallback: FunctionComponent
@@ -150,7 +150,6 @@ export const createIssue = (issue: FunctionComponent<IssueProps>) => {
   return issue;
 }
 
-export const createRouter = ({ pages, fallback, transition: withViewTransition, issue }: CreateRouterOptions) => {
   const View = () => {
     const [page, setPage] = useState(findPage({ pages }));
     const shouldTransitionBetweenPages = useMemo(() => typeof document.startViewTransition === "function" && withViewTransition ? true : false, [withViewTransition]);
@@ -166,6 +165,7 @@ export const createRouter = ({ pages, fallback, transition: withViewTransition, 
 
       return {};
     }, [page]);
+export const createRouter = <Path extends string>({ pages, fallback, transition: withViewTransition, issue, prefix }: CreateRouterOptions<Path>) => {
 
     useEffect(() => {
       const onWindowPopstate = () => {
