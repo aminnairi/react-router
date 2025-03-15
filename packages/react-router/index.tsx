@@ -27,7 +27,7 @@ export interface Page<Path extends string> {
 
 export interface CreateRouterOptions<Path extends string> {
   transition?: boolean,
-  pages: Array<Page<string>>
+  pages: Array<Page<Path>>
   fallback: FunctionComponent
   issue: FunctionComponent<IssueProps>
 }
@@ -41,7 +41,6 @@ export interface FindPageOptions {
   pages: Array<Page<string>>
 }
 
-export const createPage = <Path extends string>(page: Page<Path>): CreateRouteOutput<Path> => {
   const navigate = (parameters: Parameters<Path>, replace: boolean = false) => {
     const pathWithParameters = Object.entries(parameters).reduce((path, [parameterName, parameterValue]) => {
       return path.replace(`:${parameterName}`, parameterValue);
@@ -60,6 +59,7 @@ export const createPage = <Path extends string>(page: Page<Path>): CreateRouteOu
     page,
     navigate
   };
+export const createPage = <Path extends string>(page: Page<Path>) => {
 }
 
 export const doesRouteMatchPath = (path: string, route: string, prefix?: string): boolean => {
