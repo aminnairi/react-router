@@ -40,7 +40,11 @@ import { createPage } from "@aminnairi/react-router";
 
 export const home = createPage({
   path: "/",
-  element: () => <h1>Home page</h1>
+  element: function Home() {
+    return (
+      <h1>Home page</h1>
+    );
+  }
 });
 ```
 
@@ -49,11 +53,14 @@ touch src/router/fallback.tsx
 ```
 
 ```tsx
+import { useNavigateToPage } from "@aminnairi/react-router";
 import { home } from "./pages/home";
 
 export const Fallback = () => {
+  const navigateToHomePage = useNavigateToPage(home);
+
   return (
-    <button onClick={home.navigate}>
+    <button onClick={navigateToHomePage}>
       Go back home
     </button>
   );
@@ -66,9 +73,12 @@ touch src/router/issue.tsx
 
 ```tsx
 import { Fragment } from "react";
+import { useNavigateToPage } from "@aminnairi/react-router";
 import { home } from "./pages/home";
 
 export const Issue = () => {
+  const navigateToHomePage = useNavigateToPage(home);
+
   return (
     <Fragment>
       <h1>An issue occurred</h1>
@@ -93,8 +103,8 @@ import { home } from "./router/pages/home";
 export const router = createRouter({
   fallback: Fallback,
   issue: Issue,
-  routes: [
-    home.page
+  pages: [
+    home
   ]
 });
 ```
@@ -111,6 +121,31 @@ export default function App() {
     <router.View />
   );
 }
+```
+
+```bash
+touch src/main.tsx
+```
+
+```tsx
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { router } from "./router";
+import App from "./App";
+
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
+
+createRoot(rootElement).render(
+  <StrictMode>
+    <router.Provider>
+      <App />
+    </router.Provider>
+  </StrictMode>
+);
 ```
 
 ### Startup
@@ -130,9 +165,11 @@ import { createPage } from "@aminnairi/react-router";
 
 createPage({
   path: "/",
-  element: () => (
-    <h1>Home</h1>
-  )
+  element: function Home() {
+    return (
+      <h1>Home</h1>
+    );
+  }
 });
 ```
 
@@ -143,11 +180,11 @@ import { createPage, createRouter } from "@aminnairi/react-router";
 
 const home = createPage({
   path: "/",
-  element: () => (
-    <h1>
-      Home
-    </h1>
-  )
+  element: function Home() {
+    return (
+      <h1>Home</h1>
+    );
+  }
 });
 
 createRouter({
@@ -161,9 +198,7 @@ createRouter({
       An error occurred
     </h1>
   ),
-  pages: [
-    home.page
-  ]
+  pages: [home]
 });
 ```
 
@@ -174,69 +209,80 @@ import { createPage } from "@aminnairi/react-router";
 
 createPage({
   path: "/users/:user",
-  element: ({ parameters: { user }}) => (
-    <h1>
-      User#{user}
-    </h1>
-  )
+  element: function User({ parameters: { user }}) {
+    return (
+      <h1>User#{user}</h1>
+    );
+  }
 });
 ```
 
-And if you can have of course more than one dynamic parameter.
+And you can have of course more than one dynamic parameter.
 
 ```tsx
 import { createPage } from "@aminnairi/react-router";
 
 createPage({
   path: "/users/:user/articles/:article",
-  element: ({ parameters: { user, article }}) => (
-    <h1>
-      Article#{article } of user#{user}
-    </h1>
-  )
+  element: function UserArticle({ parameters: { user, article }}) {
+    return (
+      <h1>Article#{article } of user#{user}</h1>
+    );
+  }
 });
 ```
 
-You can also navigate to one page from another.
+### useNavigateToPage
+
+You can navigate from one page from another.
 
 ```tsx
 import { Fragment } from "react";
-import { createPage } from "@aminnairi/react-router";
+import { createPage, useNavigateToPage } from "@aminnairi/react-router";
 
 const login = createPage({
   path: "/login",
-  element: () => (
-    <h1>
-      Login
-    </h1>
-  )
+  element: function Login() {
+    return (
+      <h1>Login</h1>
+    );
+  }
 });
 
 const about = createPage({
   path: "/about",
-  element: () => (
-    <Fragment>
-      <h1>
-        About Us
-      </h1>
-      <button onClick={() => login.navigate({})}>
-      </button>
-    </Fragment>
-  )
+  element: function About() {
+    const navigateToLoginPage = useNavigateToPage(login);
+
+    return (
+      <Fragment>
+        <h1>
+          About Us
+        </h1>
+        <button onClick={navigateToLoginPage}>
+          Login
+        </button>
+      </Fragment>
+    );
+  }
 });
 
 createPage({
   path: "/",
-  element: () => (
-    <Fragment>
-      <h1>
-        Home
-      </h1>
-      <button onClick={about.navigate}>
-        About Us
-      </button>
-    </Fragment>
-  )
+  element: function Home() {
+    const navigateToAboutPage = useNavigateToPage(about);
+
+    return (
+      <Fragment>
+        <h1>
+          Home
+        </h1>
+        <button onClick={navigateToAboutPage}>
+          About Us
+        </button>
+      </Fragment>
+    );
+  }
 });
 ```
 
@@ -244,29 +290,33 @@ And you can of course navigate to pages that have dynamic parameters as well.
 
 ```tsx
 import { Fragment } from "react";
-import { createPage } from "@aminnairi/react-router";
+import { createPage, useNavigateToPage } from "@aminnairi/react-router";
 
 const user = createPage({
   path: "/users/:user",
-  element: ({ parameters: { user }}) => (
-    <h1>
-      User#{user}
-    </h1>
-  )
+  element: function User({ parameters: { user }}) {
+    return (
+      <h1>User#{user}</h1>
+    );
+  }
 });
 
 createPage({
   path: "/",
-  element: () => (
-    <Fragment>
-      <h1>
-        Home
-      </h1>
-      <button onClick={() => user.navigate({ user: "123" })}>
-        User#123
-      </button>
-    </Fragment>
-  )
+  element: function Home() {
+    const navigateToUserPage = useNavigateToPage(user);
+
+    return (
+      <Fragment>
+        <h1>
+          Home
+        </h1>
+        <button onClick={() => navigateToUserPage({ user: "123" })}>
+          User#123
+        </button>
+      </Fragment>
+    );
+  }
 });
 ```
 
@@ -281,9 +331,11 @@ import { createRouter, createPage } from "@aminnairi/react-router";
 
 const home = createPage({
   path: "/",
-  element: () => (
-    <h1>Home</h1>
-  )
+  element: function Home() {
+    return (
+      <h1>Home</h1>
+    );
+  }
 });
 
 const router = createRouter({
@@ -294,7 +346,7 @@ const router = createRouter({
     <h1>An error occurred</h1>
   ),
   pages: [
-    home.page
+    home
   ]
 });
 
@@ -324,7 +376,9 @@ const App = () => {
 
 root.render(
   <StrictMode>
-    <App />
+    <router.Provider>
+      <App />
+    </router.Provider>
   </StrictMode>
 );
 ```
@@ -340,9 +394,11 @@ import { createRouter, createPage } from "@aminnairi/react-router";
 
 const home = createPage({
   path: "/",
-  element: () => (
-    <h1>Home</h1>
-  )
+  element: function Page() {
+    return (
+      <h1>Home</h1>
+    );
+  }
 });
 
 const router = createRouter({
@@ -354,7 +410,7 @@ const router = createRouter({
     <h1>An error occurred</h1>
   ),
   pages: [
-    home.page
+    home
   ]
 });
 
@@ -384,7 +440,9 @@ const App = () => {
 
 root.render(
   <StrictMode>
-    <App />
+    <router.Provider>
+      <App />
+    </router.Provider>
   </StrictMode>
 );
 ```
@@ -398,9 +456,11 @@ import { createRouter, createPage } from "@aminnairi/react-router";
 
 const home = createPage({
   path: "/",
-  element: () => (
-    <h1>Home</h1>
-  )
+  element: function Home() {
+    return (
+      <h1>Home</h1>
+    );
+  }
 });
 
 const router = createRouter({
@@ -418,7 +478,7 @@ const router = createRouter({
     );
   ),
   pages: [
-    home.page
+    home
   ]
 });
 
@@ -448,7 +508,9 @@ const App = () => {
 
 root.render(
   <StrictMode>
-    <App />
+    <router.Provider>
+      <App />
+    </router.Provider>
   </StrictMode>
 );
 ```
@@ -462,9 +524,11 @@ import { createRouter, createPage, createIssue } from "@aminnairi/react-router";
 
 const home = createPage({
   path: "/",
-  element: () => (
-    <h1>Home</h1>
-  )
+  element: function Home() {
+    return (
+      <h1>Home</h1>
+    );
+  }
 });
 
 const Fallback = () => {
@@ -488,7 +552,7 @@ const router = createRouter({
   fallback: Fallback,
   issue: Issue,
   pages: [
-    home.page
+    home
   ]
 });
 
@@ -523,6 +587,201 @@ root.render(
 );
 ```
 
+You can use a prefix for your routes, useful if you need to publish this app in a scope like GitHub Pages.
+
+You don't have to manually append this prefix when creating pages, its automatically added for you.
+
+```tsx
+import { Fragment, StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { createRouter, createPage, createIssue, useNavigateToPage } from "@aminnairi/react-router";
+
+const home = createPage({
+  path: "/",
+  element: function Home() {
+    return (
+      <h1>Home</h1>
+    );
+  }
+});
+
+const Fallback = () => {
+  const navigateToHomePage = useNavigateToPage(home);
+
+  return (
+    <Fragment>
+      <h1>Not found</h1>
+      <button onClick={navigateToHomePage}>
+        Go Back Home
+      </button>
+    </Fragment>
+  );
+}
+
+const Issue = createIssue(({ error, reset }) => (
+  return (
+    <Fragment>
+      <h1>Error</h1>
+      <p>{error.message}</p>
+      <button onClick={reset}>Reset</button>
+    </Fragment>
+  );
+));
+
+const router = createRouter({
+  prefix: "/portfolio",
+  transition: true,
+  fallback: Fallback,
+  issue: Issue,
+  pages: [
+    home
+  ]
+});
+
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
+
+const root = createRoot(rootElement);
+
+const App = () => {
+  return (
+    <Fragment>
+      <header>
+        <h1>App</h1>
+      </header>
+      <main>
+        <router.View />
+      </main>
+      <footer>
+        Credit © Yourself 2025
+      </footer>
+    </Fragment>
+  );
+}
+
+root.render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+```
+
+### useNavigateToPage
+
+Allow you to create a function that can then be called to navigate to another page inside a React component.
+
+It accepts a page that has been created using `createPage`.
+
+```tsx
+import { Fragment } from "react";
+import { createPage, useNavigateToPage } from "@aminnairi/react-router";
+
+const home = createPath({
+  path: "/",
+  element: function Home() {
+    return (
+      <h1>Home</h1>
+    );
+  }
+});
+
+createPage({
+  path: "/about",
+  element: function About() {
+    const navigateToHomePage = useNavigateToPage(home);
+
+    return (
+      <Fragment>
+        <h1>About</h1>
+        <button onClick={navigateToHomePage}>Home</button>
+      </Fragment>
+    );
+  }
+});
+```
+
+If this page has dynamic parameters, it forces you to provide them when called inside your component.
+
+The parameters should always be provided as string, as they are the only data type that can be used inside a URL.
+
+```tsx
+import { Fragment } from "react";
+import { createPage, useNavigateToPage } from "@aminnairi/react-router";
+
+const user = createPath({
+  path: "/users/:user",
+  element: function User({ parameters: { user }}) {
+    return (
+      <h1>User#{user}</h1>
+    );
+  }
+});
+
+createPage({
+  path: "/about",
+  element: function About() {
+    const navigateToUserPage = useNavigateToPage(user);
+
+    return (
+      <Fragment>
+        <h1>About</h1>
+        <button onClick={() => navigateToUserPage({ user: "123" })}>Home</button>
+      </Fragment>
+    );
+  }
+});
+```
+
+### useSearch
+
+Allow you to get one or more search query from the URL.
+
+This will return an instance of the `URLSearchParams` Web API so that you can use you existing knowledge to manipulate the search queries easily.
+
+```tsx
+import { useMemo } from "react";
+import { createPage, useSearch } from "@aminnairi/react-router";
+
+createPage({
+  path: "/users",
+  element: function Home() {
+    const [search] = useSearch();
+    const sortedByDate = useMemo(() => search.get("sort-by") === "date", [search]);
+
+    return (
+      <h1>Users</h1>
+      <p>Sorted by date: {sortedByDate ? "yes" : "no"}</p>
+    );
+  }
+});
+```
+
+You cannot set the search queries for now, this will be added in future release of this library.
+
+### useHash
+
+Allow you to get the hash, also called fragment, from the URL which is everything after the `#` symbol.
+
+```tsx
+import { createPage, useHash } from "@aminnairi/react-router";
+
+createPage({
+  path: "/oauth/callback",
+  element: function OauthCallback() {
+    const token = useHash();
+
+    return (
+      <h1>You token is {token}</h1>
+    );
+  }
+});
+```
+
+## Internal API
+
 ### doesRouteMatchPath
 
 Return a boolean in case a route matches a path. A route is a URI that looks something like `/users/:user/articles` and a path is the browser's location pathname that looks something like `/users/123/articles`.
@@ -541,6 +800,20 @@ doesRoutePatchPath("/users/:user", "/users/123"); // true
 doesRoutePatchPath("/users/:user", "/users/123/articles"); // false
 ```
 
+You can also optionally provide a prefix.
+
+```typescript
+import { doesRouteMatchPath } from "@aminnairi/react-router";
+
+doesRoutePatchPath("/", "/github", "/github"); // true
+
+doesRoutePatchPath("/", "/github/about", "/github"); // false
+
+doesRoutePatchPath("/users/:user", "/github/users/123", "/github"); // true
+
+doesRoutePatchPath("/users/:user", "/github/users/123/articles", "/github"); // false
+```
+
 ### getParameters
 
 Return an object in case a route matches a path, with its dynamic parameters as output. It returns a generic `object` type in case no dynamic parameters are found in the URI. Note that the parameters are always strings, if you need to, convert them to other types explicitely.
@@ -557,6 +830,20 @@ getParameters("/", "/about"); // object
 getParameters("/users/:user", "/users/123"); // { user: "123" }
 
 getParameters("/users/:user", "/users/123/articles"); // { user: "123" }
+```
+
+You can also provide an optional prefix.
+
+```typescript
+import { getParameters } from "@aminnairi/react-router";
+
+getParameters("/", "/github", "/github"); // object
+
+getParameters("/", "/github/about", "/github"); // object
+
+getParameters("/users/:user", "/github/users/123", "/github"); // { user: "123" }
+
+getParameters("/users/:user", "/github/users/123/articles", "/github"); // { user: "123" }
 ```
 
 ### findPage
@@ -591,9 +878,7 @@ const pages = [
   login.page
 ];
 
-const foundPage = findPage({
-  pages
-});
+const foundPage = findPage(pages, "/login");
 
 if (foundPage) {
   console.log("Found a page matching the current location");
@@ -601,6 +886,58 @@ if (foundPage) {
 } else {
   console.log("No page matching the current location.");
 }
+```
+
+You can also provide an optional prefix.
+
+```tsx
+import { findPage, createPage } from "@aminnairi/react-router";
+
+const home = createPage({
+  path: "/",
+  element: () => <h1>Home</h1>
+});
+
+const about = createPage({
+  path: "/about",
+  element: () => <h1>About</h1>
+});
+
+const login = createPage({
+  path: "/login",
+  element: () => <h1>Login</h1>
+});
+
+const pages = [
+  home.page,
+  about.page,
+  login.page
+];
+
+const foundPage = findPage(pages, "/github/login", "/github");
+
+if (foundPage) {
+  console.log("Found a page matching the current location");
+  console.log(foundPage.path);
+} else {
+  console.log("No page matching the current location.");
+}
+```
+
+### sanitizePath
+
+Internal function that helps normalizing the URL by removing trailing and leading slashes as well as removing any duplicate and unecessary slashes.
+
+```ts
+import { sanitizePath } from "@aminnairi/react-router";
+
+sanitizePath("/"); // "/"
+
+sanitizePath("users"); // "/users"
+
+sanitizePath("users/"); // "/users"
+
+sanitizePath("users//123///articles"); // "/users/123/articles"
 ```
 
 ## Features
