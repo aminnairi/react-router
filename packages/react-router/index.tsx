@@ -35,21 +35,14 @@ export interface CreateRouterOptions<Path extends string> {
 
 export interface FindPageOptions {
   pages: Array<Page<string>>
+  path: string
 }
 
-  const navigate = (parameters: Parameters<Path>, replace: boolean = false) => {
-    const pathWithParameters = Object.entries(parameters).reduce((path, [parameterName, parameterValue]) => {
-      return path.replace(`:${parameterName}`, parameterValue);
-    }, page.path as string);
-
-    if (replace) {
-      window.history.replaceState(null, pathWithParameters, pathWithParameters);
-    } else {
-      window.history.pushState(null, pathWithParameters, pathWithParameters);
-    }
-
-    window.dispatchEvent(new CustomEvent("popstate"));
-  };
+export const sanitizePath = (path: string): string => {
+  return "/" + path
+    .replace(/^\/|\/$/g, "")
+    .replace(/\/+/g, "/");
+}
 
 export const createPage = <Path extends string>(page: Page<Path>) => {
   return page
@@ -65,16 +58,33 @@ export const doesRouteMatchPath = (path: string, route: string, prefix?: string)
   );
 }
 
-export const getParameters = <Path extends string>(config: { path: Path; route: string }): Parameters<Path> => {
-  return Object.fromEntries(
-    config.path
-      .split("/")
-      .map((part, index) => (part.startsWith(":") ? [part.slice(1), config.route.split("/")[index]] : null))
-      .filter((entry): entry is [string, string] => entry !== null)
-  ) as Parameters<Path>;
+export const getParameters = <Path extends string>(path: Path, route: string, prefix?: string): Parameters<Path> => {
+  if (!doesRouteMatchPath(path, route, prefix)) {
+    return {} as Parameters<Path>;
+  }
+
+  const pathParts = sanitizePath(`${prefix ?? ""}/${path}`).split("/").filter(Boolean);
+  const routeParts = sanitizePath(route).split("/").filter(Boolean);
+
+  return pathParts.reduce((parameters, pathPart, pathPartIndex) => {
+    const routePart = routeParts[pathPartIndex];
+
+    if (!routePart) {
+      return parameters;
+    }
+
+    if (!pathPart.startsWith(":")) {
+      return parameters;
+    }
+
+    return {
+      ...parameters,
+      [`${pathPart.slice(1)}`]: routePart
+    }
+  }, {} as Parameters<Path>);
 }
 
-const findPage = ({ pages }: FindPageOptions) => {
+const findPage = (pages: Array<Page<string>>, path: string, prefix?: string) => {
   const foundPage = pages.find(route => {
     return doesRouteMatchPath(sanitizePath(`${prefix ?? ""}/${route.path}`), sanitizePath(path));
   });
@@ -143,36 +153,95 @@ export const createIssue = (issue: FunctionComponent<IssueProps>) => {
   return issue;
 }
 
-  const View = () => {
-    const [page, setPage] = useState(findPage({ pages }));
-    const shouldTransitionBetweenPages = useMemo(() => typeof document.startViewTransition === "function" && withViewTransition ? true : false, [withViewTransition]);
-    const Fallback = useMemo(() => fallback, []);
+export interface ContextInterface {
   prefix: string,
+  pathname: string,
+  setPathname: Dispatch<SetStateAction<string>>,
+  search: URLSearchParams,
+  setSearch: Dispatch<SetStateAction<URLSearchParams>>,
+  hash: string,
+  setHash: Dispatch<SetStateAction<string>>
+}
 
-    const parameters = useMemo(() => {
-      if (page) {
-        return getParameters({
-          path: page.path,
-          route: window.location.pathname
-        })
-      }
+export interface ProviderProps {
+  children: ReactNode
+}
+
+const Context = createContext<ContextInterface>({
   prefix: "",
+  pathname: sanitizePath(window.location.pathname),
+  setPathname: () => { },
+  search: new URLSearchParams(),
+  setSearch: () => { },
+  hash: window.location.hash,
+  setHash: () => { }
+});
 
-      return {};
-    }, [page]);
+export const useNavigateToPage = <Path extends string>(page: Page<Path>) => {
+  const { prefix } = useContext(Context);
+
+  return (parameters: Parameters<Path>, replace: boolean = false) => {
+    const pathWithParameters = Object.entries(parameters).reduce((path, [parameterName, parameterValue]) => {
+      return path.replace(`:${parameterName}`, parameterValue);
+    }, sanitizePath(`${prefix ?? ""}/${page.path}`));
+
+    if (replace) {
+      window.history.replaceState(null, pathWithParameters, pathWithParameters);
+    } else {
+      window.history.pushState(null, pathWithParameters, pathWithParameters);
+    }
+
+    window.dispatchEvent(new CustomEvent("popstate"));
+  }
+};
+
+export const useIsActivePage = (page: Page<string>) => {
+  const { pathname, prefix } = useContext(Context);
+
+  return doesRouteMatchPath(sanitizePath(page.path), sanitizePath(pathname), prefix);
+};
+
+export const useSearch = () => {
+  const { search } = useContext(Context);
+
+  return search;
+};
+
+export const useHash = () => {
+  const { hash } = useContext(Context);
+  return hash;
+};
+
 export const createRouter = <Path extends string>({ pages, fallback, transition: withViewTransition, issue, prefix }: CreateRouterOptions<Path>) => {
+  const Provider = ({ children }: ProviderProps) => {
+    const [pathname, setPathname] = useState(sanitizePath(window.location.pathname));
+    const [search, setSearch] = useState(new URLSearchParams(sanitizePath(window.location.search)));
+    const [hash, setHash] = useState(window.location.hash);
+    const shouldTransitionBetweenPages = useMemo(() => typeof document.startViewTransition === "function" && withViewTransition ? true : false, [withViewTransition]);
+
+    const value = useMemo(() => {
+      return {
+        prefix: prefix ?? "",
+        pathname,
+        search,
+        hash,
+        setPathname,
+        setSearch,
+        setHash
+      };
+    }, [prefix, pathname, search, hash]);
 
     useEffect(() => {
       const onWindowPopstate = () => {
-        const foundPage = findPage({ pages });
-
         if (shouldTransitionBetweenPages) {
           document.startViewTransition(() => {
-            setPage(foundPage);
+            setPathname(sanitizePath(window.location.pathname));
           });
-        } else {
-          setPage(foundPage);
+
+          return;
         }
+
+        setPathname(sanitizePath(window.location.pathname));
       };
 
       window.addEventListener("popstate", onWindowPopstate);
@@ -182,18 +251,41 @@ export const createRouter = <Path extends string>({ pages, fallback, transition:
       }
     }, []);
 
+    return (
+      <Context.Provider value={value}>
+        <ErrorBoundary fallback={issue} transition={shouldTransitionBetweenPages}>
+          {children}
+        </ErrorBoundary>
+      </Context.Provider>
+    );
+  };
+
+  const View = () => {
+    const Fallback = useMemo(() => fallback, []);
+    const { pathname } = useContext(Context);
+    const page = useMemo(() => findPage(pages, pathname, prefix), [pathname]);
+
+    const parameters = useMemo(() => {
+      if (page) {
+        return getParameters(sanitizePath(page.path), sanitizePath(window.location.pathname), prefix);
+      }
+
+      return {};
+    }, [page]);
+
     if (page) {
       return (
-        <ErrorBoundary fallback={issue} transition={shouldTransitionBetweenPages}>
-          {<page.element parameters={parameters} />}
-        </ErrorBoundary>
+        <page.element parameters={parameters} />
       );
     }
 
-    return <Fallback />;
+    return (
+      <Fallback />
+    );
   };
 
   return {
-    View
+    View,
+    Provider,
   };
 }
