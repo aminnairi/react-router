@@ -33,11 +33,6 @@ export interface CreateRouterOptions<Path extends string> {
   issue: FunctionComponent<IssueProps>
 }
 
-export interface CreateRouteOutput<Path extends string> {
-  page: Page<Path>,
-  navigate: (parameters: Parameters<Path>) => void
-}
-
 export interface FindPageOptions {
   pages: Array<Page<string>>
 }
@@ -56,11 +51,8 @@ export interface FindPageOptions {
     window.dispatchEvent(new CustomEvent("popstate"));
   };
 
-  return {
-    page,
-    navigate
-  };
 export const createPage = <Path extends string>(page: Page<Path>) => {
+  return page
 }
 
 export const doesRouteMatchPath = (path: string, route: string, prefix?: string): boolean => {
