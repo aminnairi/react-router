@@ -735,6 +735,40 @@ createPage({
 });
 ```
 
+### useLink
+
+Allow you to navigate to another page using a JSX component instead of a callback as for the `useNavigateToPage` hook.
+
+The created component is simply a `<a href="...">{children}</a>` under the hood which prevents the default behavior of the navigator which is to create a new HTTP request and to reload the page. The `href` attribute is computed from the page path and its parameters.
+
+```tsx
+import { Fragment } from "react";
+import { createPage, useLink } from "@aminnairi/react-router";
+
+const user = createPath({
+  path: "/users/:user",
+  element: function User({ parameters: { user }}) {
+    return (
+      <h1>User#{user}</h1>
+    );
+  }
+});
+
+createPage({
+  path: "/about",
+  element: function About() {
+    const Link = useLink(user);
+
+    return (
+      <Fragment>
+        <h1>About</h1>
+        <Link parameters={{ user: "123" }}>User#123</Link>
+      </Fragment>
+    );
+  }
+});
+```
+
 ### useSearch
 
 Allow you to get one or more search query from the URL.
