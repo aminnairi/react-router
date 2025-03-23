@@ -976,9 +976,24 @@ See [`LICENSE`](./LICENSE).
 
 ### Versions
 
+- [`1.0.1`](#101)
 - [`1.0.0`](#100)
 - [`0.1.1`](#011)
 - [`0.1.0`](#010)
+
+### 1.0.1
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+None.
+
+#### Bug & security fixes
+
+- Fixed an issue when navigating to a page that already starts with a slash
 
 ### 1.0.0
 
