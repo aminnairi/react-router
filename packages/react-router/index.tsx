@@ -1,4 +1,4 @@
-import { useEffect, useState, FunctionComponent, useMemo, Component, PropsWithChildren, createContext, SetStateAction, Dispatch, ReactNode, useContext, useCallback } from "react";
+import { useEffect, useState, FunctionComponent, useMemo, Component, PropsWithChildren, createContext, SetStateAction, Dispatch, ReactNode, useContext, useCallback, memo, MouseEvent } from "react";
 
 export type AbsolutePath<Path extends string> =
   Path extends `${infer Start}:${string}/${infer Rest}`
@@ -187,8 +187,6 @@ export const useNavigateToPage = <Path extends string>(page: Page<Path>) => {
       return path.replace(`:${parameterName}`, parameterValue);
     }, initialPath);
 
-    console.log({ initialPath, pathWithParameters });
-
     if (replace) {
       window.history.replaceState(null, pathWithParameters, pathWithParameters);
     } else {
@@ -214,6 +212,35 @@ export const useSearch = () => {
 export const useHash = () => {
   const { hash } = useContext(Context);
   return hash;
+};
+
+export const useLink = <Path extends string>(page: Page<Path>) => {
+  const Link = memo(({ children, parameters }: { children: ReactNode, parameters: Parameters<Path> }) => {
+    const { prefix } = useContext(Context);
+    const navigateToPage = useNavigateToPage(page);
+
+    const pathWithParameters = useMemo(() => {
+      return Object.entries(parameters).reduce((previousPath, [parameterName, parameterValue]) => {
+        return previousPath.replace(`:${parameterName}`, parameterValue);
+      }, sanitizePath(`${prefix ?? ""}/${page.path}`));
+    }, []);
+
+    const navigate = useCallback((event: MouseEvent) => {
+      event.preventDefault();
+      navigateToPage(parameters);
+    }, []);
+
+    return (
+      <a
+        href={pathWithParameters}
+        onClick={navigate}>
+        {children}
+      </a>
+    );
+
+  });
+
+  return Link;
 };
 
 export const createRouter = <Path extends string>({ pages, fallback, transition: withViewTransition, issue, prefix }: CreateRouterOptions<Path>) => {
