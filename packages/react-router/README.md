@@ -1010,10 +1010,25 @@ See [`LICENSE`](./LICENSE).
 
 ### Versions
 
+- [`1.1.0`](#110)
 - [`1.0.1`](#101)
 - [`1.0.0`](#100)
 - [`0.1.1`](#011)
 - [`0.1.0`](#010)
+
+### 1.1.0
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+- Added a new `useLink` hook to create components that allow for navigating to another page
+
+#### Bug & security fixes
+
+None.
 
 ### 1.0.1
 
