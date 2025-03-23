@@ -1,4 +1,4 @@
-import { useEffect, useState, FunctionComponent, useMemo, Component, PropsWithChildren, createContext, SetStateAction, Dispatch, ReactNode, useContext } from "react";
+import { useEffect, useState, FunctionComponent, useMemo, Component, PropsWithChildren, createContext, SetStateAction, Dispatch, ReactNode, useContext, useCallback } from "react";
 
 export type AbsolutePath<Path extends string> =
   Path extends `${infer Start}:${string}/${infer Rest}`
@@ -39,10 +39,10 @@ export interface FindPageOptions {
 }
 
 export const sanitizePath = (path: string): string => {
-  return "/" + path
-    .replace(/^\/|\/$/g, "")
-    .replace(/\/+/g, "/");
+  const sanitizedPath = path.replace(/\/+/g, "/").replace(/^\/|\/$/g, "")
+  return "/" + sanitizedPath;
 }
+
 
 export const createPage = <Path extends string>(page: Page<Path>) => {
   return page
@@ -180,10 +180,14 @@ const Context = createContext<ContextInterface>({
 export const useNavigateToPage = <Path extends string>(page: Page<Path>) => {
   const { prefix } = useContext(Context);
 
-  return (parameters: Parameters<Path>, replace: boolean = false) => {
+  return useCallback((parameters: Parameters<Path>, replace: boolean = false) => {
+    const initialPath = sanitizePath(`${prefix ?? ""}/${page.path}`);
+
     const pathWithParameters = Object.entries(parameters).reduce((path, [parameterName, parameterValue]) => {
       return path.replace(`:${parameterName}`, parameterValue);
-    }, sanitizePath(`${prefix ?? ""}/${page.path}`));
+    }, initialPath);
+
+    console.log({ initialPath, pathWithParameters });
 
     if (replace) {
       window.history.replaceState(null, pathWithParameters, pathWithParameters);
@@ -192,7 +196,7 @@ export const useNavigateToPage = <Path extends string>(page: Page<Path>) => {
     }
 
     window.dispatchEvent(new CustomEvent("popstate"));
-  }
+  }, [page]);
 };
 
 export const useIsActivePage = (page: Page<string>) => {
