@@ -25,8 +25,10 @@ export interface Page<Path extends string> {
   element: FunctionComponent<PageComponentProps<Path>>
 }
 
+export type Transition = (direction: NavigationDirection, next: () => void) => void;
+
 export interface CreateRouterOptions<Path extends string> {
-  transition?: boolean,
+  transition?: Transition,
   prefix?: string,
   pages: Array<Page<Path>>
   fallback: FunctionComponent
@@ -99,7 +101,7 @@ export interface IssueProps {
 
 export interface ErrorBoundaryProps {
   fallback: FunctionComponent<IssueProps>,
-  transition: boolean
+  transition?: Transition
 }
 
 export interface ErrorBoundaryState {
@@ -177,6 +179,11 @@ const Context = createContext<ContextInterface>({
   setHash: () => { }
 });
 
+enum NavigationDirection {
+  Forward = "pushstate",
+  Backward = "popstate"
+}
+
 export const useNavigateToPage = <Path extends string>(page: Page<Path>) => {
   const { prefix } = useContext(Context);
 
@@ -193,9 +200,15 @@ export const useNavigateToPage = <Path extends string>(page: Page<Path>) => {
       window.history.pushState(null, pathWithParameters, pathWithParameters);
     }
 
-    window.dispatchEvent(new CustomEvent("popstate"));
+    window.dispatchEvent(new CustomEvent(NavigationDirection.Forward));
   }, [page]);
 };
+
+export const useNavigateBack = () => {
+  return useCallback(() => {
+    window.dispatchEvent(new CustomEvent(NavigationDirection.Backward));
+  }, []);
+}
 
 export const useIsActivePage = (page: Page<string>) => {
   const { pathname, prefix } = useContext(Context);
@@ -243,12 +256,45 @@ export const useLink = <Path extends string>(page: Page<Path>) => {
   return Link;
 };
 
-export const createRouter = <Path extends string>({ pages, fallback, transition: withViewTransition, issue, prefix }: CreateRouterOptions<Path>) => {
+export const slideFadeTransition: Transition = async (direction: NavigationDirection, next) => {
+  const transition = document.startViewTransition(() => {
+    next();
+  });
+
+  await transition.ready;
+
+  document.documentElement.animate(
+    [
+      { transform: 'translateX(0)', opacity: 1 },
+      { transform: `translateX(${direction === NavigationDirection.Forward ? '100%' : '-100%'})`, opacity: 0 }
+    ],
+    {
+      duration: 250,
+      easing: "ease-in-out",
+      fill: "both",
+      pseudoElement: "::view-transition-old(root)",
+    }
+  );
+
+  document.documentElement.animate(
+    [
+      { transform: `translateX(${direction === NavigationDirection.Forward ? '-100%' : '100%'})`, opacity: 0 },
+      { transform: 'translateX(0)', opacity: 1 }
+    ],
+    {
+      duration: 250,
+      easing: "ease-in-out",
+      fill: "both",
+      pseudoElement: "::view-transition-new(root)",
+    }
+  );
+}
+
+export const createRouter = <Path extends string>({ pages, fallback, transition, issue, prefix }: CreateRouterOptions<Path>) => {
   const Provider = ({ children }: ProviderProps) => {
     const [pathname, setPathname] = useState(sanitizePath(window.location.pathname));
     const [search, setSearch] = useState(new URLSearchParams(sanitizePath(window.location.search)));
     const [hash, setHash] = useState(window.location.hash);
-    const shouldTransitionBetweenPages = useMemo(() => typeof document.startViewTransition === "function" && withViewTransition ? true : false, [withViewTransition]);
 
     const value = useMemo(() => {
       return {
@@ -263,9 +309,9 @@ export const createRouter = <Path extends string>({ pages, fallback, transition:
     }, [prefix, pathname, search, hash]);
 
     useEffect(() => {
-      const onWindowPopstate = () => {
-        if (shouldTransitionBetweenPages) {
-          document.startViewTransition(() => {
+      const onNavigation = async (direction: NavigationDirection) => {
+        if (transition) {
+          transition(direction, () => {
             setPathname(sanitizePath(window.location.pathname));
           });
 
@@ -273,18 +319,28 @@ export const createRouter = <Path extends string>({ pages, fallback, transition:
         }
 
         setPathname(sanitizePath(window.location.pathname));
+      }
+
+      const onNavigationForward = () => {
+        onNavigation(NavigationDirection.Forward);
       };
 
-      window.addEventListener("popstate", onWindowPopstate);
+      const onNavigationBackward = () => {
+        onNavigation(NavigationDirection.Backward);
+      };
+
+      window.addEventListener(NavigationDirection.Forward, onNavigationForward);
+      window.addEventListener(NavigationDirection.Backward, onNavigationBackward);
 
       return () => {
-        window.removeEventListener("popstate", onWindowPopstate);
+        window.removeEventListener(NavigationDirection.Forward, onNavigationForward);
+        window.removeEventListener(NavigationDirection.Backward, onNavigationBackward);
       }
     }, []);
 
     return (
       <Context.Provider value={value}>
-        <ErrorBoundary fallback={issue} transition={shouldTransitionBetweenPages}>
+        <ErrorBoundary fallback={issue}>
           {children}
         </ErrorBoundary>
       </Context.Provider>
@@ -306,7 +362,9 @@ export const createRouter = <Path extends string>({ pages, fallback, transition:
 
     if (page) {
       return (
-        <page.element parameters={parameters} />
+        <div >
+          <page.element parameters={parameters} />
+        </div>
       );
     }
 
