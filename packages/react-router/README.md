@@ -60,7 +60,7 @@ export const Fallback = () => {
   const navigateToHomePage = useNavigateToPage(home);
 
   return (
-    <button onClick={navigateToHomePage}>
+    <button onClick={() => navigateToHomePage({})}>
       Go back home
     </button>
   );
@@ -82,7 +82,7 @@ export const Issue = () => {
   return (
     <Fragment>
       <h1>An issue occurred</h1>
-      <button onClick={home.navigate}>
+      <button onClick={() => navigateToHomePage({})}>
         Go back home
       </button>
     </Fragment>
@@ -94,11 +94,11 @@ export const Issue = () => {
 touch src/router/index.ts
 ```
 
-```tsx
+```ts
 import { createRouter } from "@aminnairi/react-router";
-import { Fallback } from "./router/fallback";
-import { Issue } from "./router/issue";
-import { home } from "./router/pages/home";
+import { Fallback } from "./fallback";
+import { Issue } from "./issue";
+import { home } from "./pages/home";
 
 export const router = createRouter({
   fallback: Fallback,
@@ -259,7 +259,7 @@ const about = createPage({
         <h1>
           About Us
         </h1>
-        <button onClick={navigateToLoginPage}>
+        <button onClick={() => navigateToLoginPage({})}>
           Login
         </button>
       </Fragment>
@@ -277,7 +277,7 @@ createPage({
         <h1>
           Home
         </h1>
-        <button onClick={navigateToAboutPage}>
+        <button onClick={() => navigateToAboutPage({})}>
           About Us
         </button>
       </Fragment>
@@ -385,12 +385,14 @@ root.render(
 
 You can also activate the View Transition Web API if you want before each page renders. This is nice because by default, the browser already has some styling that allows for a smooth and simple transition between pages.
 
-All you have to do is to set the `withViewTransition` property to `true` in the arguments of the `createRouter` function. By default, its value is set to `false` if not provided in the arguments of the `createRouter` function.
+All you have to do is to provide a `transition` function in the arguments of the `createRouter` function. This function receives the navigation direction (`"pushstate"` or `"popstate"`) and a `next` callback to render the next page.
+
+This library also exports a `slideFadeTransition` that you can use out-of-the-box.
 
 ```tsx
 import { Fragment, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createRouter, createPage } from "@aminnairi/react-router";
+import { createRouter, createPage, slideFadeTransition } from "@aminnairi/react-router";
 
 const home = createPage({
   path: "/",
@@ -402,7 +404,7 @@ const home = createPage({
 });
 
 const router = createRouter({
-  transition: true,
+  transition: slideFadeTransition,
   fallback: () => (
     <h1>Not found</h1>
   ),
@@ -464,18 +466,15 @@ const home = createPage({
 });
 
 const router = createRouter({
-  transition: true,
   fallback: () => (
     <h1>Not found</h1>
   ),
   issue: ({ error, reset }) => (
-    return (
-      <Fragment>
-        <h1>Error</h1>
-        <p>{error.message}</p>
-        <button onClick={reset}>Reset</button>
-      </Fragment>
-    );
+    <Fragment>
+      <h1>Error</h1>
+      <p>{error.message}</p>
+      <button onClick={reset}>Reset</button>
+    </Fragment>
   ),
   pages: [
     home
@@ -538,17 +537,14 @@ const Fallback = () => {
 }
 
 const Issue = createIssue(({ error, reset }) => (
-  return (
-    <Fragment>
-      <h1>Error</h1>
-      <p>{error.message}</p>
-      <button onClick={reset}>Reset</button>
-    </Fragment>
-  );
+  <Fragment>
+    <h1>Error</h1>
+    <p>{error.message}</p>
+    <button onClick={reset}>Reset</button>
+  </Fragment>
 ));
 
 const router = createRouter({
-  transition: true,
   fallback: Fallback,
   issue: Issue,
   pages: [
@@ -582,7 +578,9 @@ const App = () => {
 
 root.render(
   <StrictMode>
-    <App />
+    <router.Provider>
+      <App />
+    </router.Provider>
   </StrictMode>
 );
 ```
@@ -611,7 +609,7 @@ const Fallback = () => {
   return (
     <Fragment>
       <h1>Not found</h1>
-      <button onClick={navigateToHomePage}>
+      <button onClick={() => navigateToHomePage({})}>
         Go Back Home
       </button>
     </Fragment>
@@ -619,18 +617,15 @@ const Fallback = () => {
 }
 
 const Issue = createIssue(({ error, reset }) => (
-  return (
-    <Fragment>
-      <h1>Error</h1>
-      <p>{error.message}</p>
-      <button onClick={reset}>Reset</button>
-    </Fragment>
-  );
+  <Fragment>
+    <h1>Error</h1>
+    <p>{error.message}</p>
+    <button onClick={reset}>Reset</button>
+  </Fragment>
 ));
 
 const router = createRouter({
   prefix: "/portfolio",
-  transition: true,
   fallback: Fallback,
   issue: Issue,
   pages: [
@@ -664,7 +659,9 @@ const App = () => {
 
 root.render(
   <StrictMode>
-    <App />
+    <router.Provider>
+      <App />
+    </router.Provider>
   </StrictMode>
 );
 ```
@@ -679,7 +676,7 @@ It accepts a page that has been created using `createPage`.
 import { Fragment } from "react";
 import { createPage, useNavigateToPage } from "@aminnairi/react-router";
 
-const home = createPath({
+const home = createPage({
   path: "/",
   element: function Home() {
     return (
@@ -696,7 +693,7 @@ createPage({
     return (
       <Fragment>
         <h1>About</h1>
-        <button onClick={navigateToHomePage}>Home</button>
+        <button onClick={() => navigateToHomePage({})}>Home</button>
       </Fragment>
     );
   }
@@ -711,7 +708,7 @@ The parameters should always be provided as string, as they are the only data ty
 import { Fragment } from "react";
 import { createPage, useNavigateToPage } from "@aminnairi/react-router";
 
-const user = createPath({
+const user = createPage({
   path: "/users/:user",
   element: function User({ parameters: { user }}) {
     return (
@@ -745,7 +742,7 @@ The created component is simply a `<a href="...">{children}</a>` under the hood 
 import { Fragment } from "react";
 import { createPage, useLink } from "@aminnairi/react-router";
 
-const user = createPath({
+const user = createPage({
   path: "/users/:user",
   element: function User({ parameters: { user }}) {
     return (
@@ -782,7 +779,7 @@ import { createPage, useSearch } from "@aminnairi/react-router";
 createPage({
   path: "/users",
   element: function Home() {
-    const [search] = useSearch();
+    const search = useSearch();
     const sortedByDate = useMemo(() => search.get("sort-by") === "date", [search]);
 
     return (
@@ -825,13 +822,13 @@ This function is mainly used in the internals of the `createRouter` and in most 
 ```typescript
 import { doesRouteMatchPath } from "@aminnairi/react-router";
 
-doesRoutePatchPath("/", "/"); // true
+doesRouteMatchPath("/", "/"); // true
 
-doesRoutePatchPath("/", "/about"); // false
+doesRouteMatchPath("/", "/about"); // false
 
-doesRoutePatchPath("/users/:user", "/users/123"); // true
+doesRouteMatchPath("/users/:user", "/users/123"); // true
 
-doesRoutePatchPath("/users/:user", "/users/123/articles"); // false
+doesRouteMatchPath("/users/:user", "/users/123/articles"); // false
 ```
 
 You can also optionally provide a prefix.
@@ -839,13 +836,13 @@ You can also optionally provide a prefix.
 ```typescript
 import { doesRouteMatchPath } from "@aminnairi/react-router";
 
-doesRoutePatchPath("/", "/github", "/github"); // true
+doesRouteMatchPath("/", "/github", "/github"); // true
 
-doesRoutePatchPath("/", "/github/about", "/github"); // false
+doesRouteMatchPath("/", "/github/about", "/github"); // false
 
-doesRoutePatchPath("/users/:user", "/github/users/123", "/github"); // true
+doesRouteMatchPath("/users/:user", "/github/users/123", "/github"); // true
 
-doesRoutePatchPath("/users/:user", "/github/users/123/articles", "/github"); // false
+doesRouteMatchPath("/users/:user", "/github/users/123/articles", "/github"); // false
 ```
 
 ### getParameters
@@ -857,13 +854,13 @@ This function is mainly used in the internals of the `createRouter` and in most 
 ```typescript
 import { getParameters } from "@aminnairi/react-router";
 
-getParameters("/", "/"); // object
+getParameters("/", "/"); // {}
 
-getParameters("/", "/about"); // object
+getParameters("/", "/about"); // {}
 
 getParameters("/users/:user", "/users/123"); // { user: "123" }
 
-getParameters("/users/:user", "/users/123/articles"); // { user: "123" }
+getParameters("/users/:user", "/users/123/articles"); // {}
 ```
 
 You can also provide an optional prefix.
@@ -871,91 +868,13 @@ You can also provide an optional prefix.
 ```typescript
 import { getParameters } from "@aminnairi/react-router";
 
-getParameters("/", "/github", "/github"); // object
+getParameters("/", "/github", "/github"); // {}
 
-getParameters("/", "/github/about", "/github"); // object
+getParameters("/", "/github/about", "/github"); // {}
 
 getParameters("/users/:user", "/github/users/123", "/github"); // { user: "123" }
 
-getParameters("/users/:user", "/github/users/123/articles", "/github"); // { user: "123" }
-```
-
-### findPage
-
-Return a page that matches the `window.location.pathname` property containing the current URI of the page from an array of pages.
-
-If it does not match any pages, it returns `undefined` instead.
-
-This function is mainly used in the internals of the `createRouter` and in most case should not be necessary.
-
-```tsx
-import { findPage, createPage } from "@aminnairi/react-router";
-
-const home = createPage({
-  path: "/",
-  element: () => <h1>Home</h1>
-});
-
-const about = createPage({
-  path: "/about",
-  element: () => <h1>About</h1>
-});
-
-const login = createPage({
-  path: "/login",
-  element: () => <h1>Login</h1>
-});
-
-const pages = [
-  home.page,
-  about.page,
-  login.page
-];
-
-const foundPage = findPage(pages, "/login");
-
-if (foundPage) {
-  console.log("Found a page matching the current location");
-  console.log(foundPage.path);
-} else {
-  console.log("No page matching the current location.");
-}
-```
-
-You can also provide an optional prefix.
-
-```tsx
-import { findPage, createPage } from "@aminnairi/react-router";
-
-const home = createPage({
-  path: "/",
-  element: () => <h1>Home</h1>
-});
-
-const about = createPage({
-  path: "/about",
-  element: () => <h1>About</h1>
-});
-
-const login = createPage({
-  path: "/login",
-  element: () => <h1>Login</h1>
-});
-
-const pages = [
-  home.page,
-  about.page,
-  login.page
-];
-
-const foundPage = findPage(pages, "/github/login", "/github");
-
-if (foundPage) {
-  console.log("Found a page matching the current location");
-  console.log(foundPage.path);
-} else {
-  console.log("No page matching the current location.");
-}
+getParameters("/users/:user", "/github/users/123/articles", "/github"); // {}
 ```
 
 ### sanitizePath
@@ -994,9 +913,7 @@ This means that you can use this library with other popular solutions for handli
 
 ### Transition
 
-Support for the View Transition API is built-in and allows for painless and smooth view transition out-of-the-box without having to do anything.
-
-This can also easily be disabled if needed.
+Support for the View Transition API is built-in and allows for painless and smooth view transition out-of-the-box. You can create your own transition animation, and the library also exports a `slideFadeTransition` ready to be used.
 
 ### Error handling
 
@@ -1010,11 +927,27 @@ See [`LICENSE`](./LICENSE).
 
 ### Versions
 
+- [`2.0.0`](#200)
 - [`1.1.0`](#110)
 - [`1.0.1`](#101)
 - [`1.0.0`](#100)
 - [`0.1.1`](#011)
 - [`0.1.0`](#010)
+
+### 2.0.0
+
+#### Major changes
+
+- The `transition` property in `createRouter` is now a function instead of a boolean, which allows for more control over the animation. This is a breaking change.
+- A `slideFadeTransition` is now exported and can be used directly.
+
+#### Minor changes
+
+None.
+
+#### Bug & security fixes
+
+None.
 
 ### 1.1.0
 
