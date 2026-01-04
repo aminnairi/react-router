@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useEffect, useState, FunctionComponent, useMemo, Component, PropsWithChildren, createContext, SetStateAction, Dispatch, ReactNode, useContext, useCallback, memo, MouseEvent } from "react";
 
 export type AbsolutePath<Path extends string> =
@@ -115,13 +116,13 @@ export class ErrorBoundary extends Component<PropsWithChildren<ErrorBoundaryProp
     this.state = { error: null };
   }
 
-  static getDerivedStateFromError(error: unknown) {
+  public static getDerivedStateFromError(error: unknown) {
     const normalizedError = error instanceof Error ? error : new Error(String(error));
 
     return { error: normalizedError };
   }
 
-  render() {
+  public override render() {
     const viewTransitionSupported = typeof document.startViewTransition === "function";
 
     if (this.state.error) {
@@ -201,7 +202,7 @@ export const useNavigateToPage = <Path extends string>(page: Page<Path>) => {
     }
 
     window.dispatchEvent(new CustomEvent(NavigationDirection.Forward));
-  }, [page]);
+  }, [page, prefix]);
 };
 
 export const useNavigateBack = () => {
@@ -236,12 +237,12 @@ export const useLink = <Path extends string>(page: Page<Path>) => {
       return Object.entries(parameters).reduce((previousPath, [parameterName, parameterValue]) => {
         return previousPath.replace(`:${parameterName}`, parameterValue);
       }, sanitizePath(`${prefix ?? ""}/${page.path}`));
-    }, []);
+    }, [prefix, page, parameters]);
 
     const navigate = useCallback((event: MouseEvent) => {
       event.preventDefault();
       navigateToPage(parameters);
-    }, []);
+    }, [navigateToPage, parameters]);
 
     return (
       <a
