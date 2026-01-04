@@ -17,6 +17,7 @@ cd project
 ```
 
 ### Dependencies installation
+
 ```bash
 npm install
 ```
@@ -41,10 +42,8 @@ import { createPage } from "@aminnairi/react-router";
 export const home = createPage({
   path: "/",
   element: function Home() {
-    return (
-      <h1>Home page</h1>
-    );
-  }
+    return <h1>Home page</h1>;
+  },
 });
 ```
 
@@ -59,12 +58,8 @@ import { home } from "./pages/home";
 export const Fallback = () => {
   const navigateToHomePage = useNavigateToPage(home);
 
-  return (
-    <button onClick={() => navigateToHomePage({})}>
-      Go back home
-    </button>
-  );
-}
+  return <button onClick={() => navigateToHomePage({})}>Go back home</button>;
+};
 ```
 
 ```bash
@@ -82,12 +77,10 @@ export const Issue = () => {
   return (
     <Fragment>
       <h1>An issue occurred</h1>
-      <button onClick={() => navigateToHomePage({})}>
-        Go back home
-      </button>
+      <button onClick={() => navigateToHomePage({})}>Go back home</button>
     </Fragment>
   );
-}
+};
 ```
 
 ```bash
@@ -103,9 +96,7 @@ import { home } from "./pages/home";
 export const router = createRouter({
   fallback: Fallback,
   issue: Issue,
-  pages: [
-    home
-  ]
+  pages: [home],
 });
 ```
 
@@ -117,9 +108,7 @@ touch src/App.tsx
 import { router } from "./router";
 
 export default function App() {
-  return (
-    <router.View />
-  );
+  return <router.View />;
 }
 ```
 
@@ -144,7 +133,7 @@ createRoot(rootElement).render(
     <router.Provider>
       <App />
     </router.Provider>
-  </StrictMode>
+  </StrictMode>,
 );
 ```
 
@@ -166,10 +155,8 @@ import { createPage } from "@aminnairi/react-router";
 createPage({
   path: "/",
   element: function Home() {
-    return (
-      <h1>Home</h1>
-    );
-  }
+    return <h1>Home</h1>;
+  },
 });
 ```
 
@@ -181,24 +168,14 @@ import { createPage, createRouter } from "@aminnairi/react-router";
 const home = createPage({
   path: "/",
   element: function Home() {
-    return (
-      <h1>Home</h1>
-    );
-  }
+    return <h1>Home</h1>;
+  },
 });
 
 createRouter({
-  fallback: () => (
-    <h1>
-      Not found
-    </h1>
-  ),
-  issue: () => (
-    <h1>
-      An error occurred
-    </h1>
-  ),
-  pages: [home]
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home],
 });
 ```
 
@@ -209,11 +186,9 @@ import { createPage } from "@aminnairi/react-router";
 
 createPage({
   path: "/users/:user",
-  element: function User({ parameters: { user }}) {
-    return (
-      <h1>User#{user}</h1>
-    );
-  }
+  element: function User({ parameters: { user } }) {
+    return <h1>User#{user}</h1>;
+  },
 });
 ```
 
@@ -224,11 +199,13 @@ import { createPage } from "@aminnairi/react-router";
 
 createPage({
   path: "/users/:user/articles/:article",
-  element: function UserArticle({ parameters: { user, article }}) {
+  element: function UserArticle({ parameters: { user, article } }) {
     return (
-      <h1>Article#{article } of user#{user}</h1>
+      <h1>
+        Article#{article} of user#{user}
+      </h1>
     );
-  }
+  },
 });
 ```
 
@@ -243,10 +220,8 @@ import { createPage, useNavigateToPage } from "@aminnairi/react-router";
 const login = createPage({
   path: "/login",
   element: function Login() {
-    return (
-      <h1>Login</h1>
-    );
-  }
+    return <h1>Login</h1>;
+  },
 });
 
 const about = createPage({
@@ -256,15 +231,11 @@ const about = createPage({
 
     return (
       <Fragment>
-        <h1>
-          About Us
-        </h1>
-        <button onClick={() => navigateToLoginPage({})}>
-          Login
-        </button>
+        <h1>About Us</h1>
+        <button onClick={() => navigateToLoginPage({})}>Login</button>
       </Fragment>
     );
-  }
+  },
 });
 
 createPage({
@@ -274,15 +245,11 @@ createPage({
 
     return (
       <Fragment>
-        <h1>
-          Home
-        </h1>
-        <button onClick={() => navigateToAboutPage({})}>
-          About Us
-        </button>
+        <h1>Home</h1>
+        <button onClick={() => navigateToAboutPage({})}>About Us</button>
       </Fragment>
     );
-  }
+  },
 });
 ```
 
@@ -294,11 +261,9 @@ import { createPage, useNavigateToPage } from "@aminnairi/react-router";
 
 const user = createPage({
   path: "/users/:user",
-  element: function User({ parameters: { user }}) {
-    return (
-      <h1>User#{user}</h1>
-    );
-  }
+  element: function User({ parameters: { user } }) {
+    return <h1>User#{user}</h1>;
+  },
 });
 
 createPage({
@@ -308,15 +273,13 @@ createPage({
 
     return (
       <Fragment>
-        <h1>
-          Home
-        </h1>
+        <h1>Home</h1>
         <button onClick={() => navigateToUserPage({ user: "123" })}>
           User#123
         </button>
       </Fragment>
     );
-  }
+  },
 });
 ```
 
@@ -332,22 +295,14 @@ import { createRouter, createPage } from "@aminnairi/react-router";
 const home = createPage({
   path: "/",
   element: function Home() {
-    return (
-      <h1>Home</h1>
-    );
-  }
+    return <h1>Home</h1>;
+  },
 });
 
 const router = createRouter({
-  fallback: () => (
-    <h1>Not found</h1>
-  ),
-  issue: () => (
-    <h1>An error occurred</h1>
-  ),
-  pages: [
-    home
-  ]
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home],
 });
 
 const rootElement = document.getElementById("root");
@@ -367,19 +322,17 @@ const App = () => {
       <main>
         <router.View />
       </main>
-      <footer>
-        Credit © Yourself 2025
-      </footer>
+      <footer>Credit © Yourself 2025</footer>
     </Fragment>
   );
-}
+};
 
 root.render(
   <StrictMode>
     <router.Provider>
       <App />
     </router.Provider>
-  </StrictMode>
+  </StrictMode>,
 );
 ```
 
@@ -392,28 +345,24 @@ This library also exports a `slideFadeTransition` that you can use out-of-the-bo
 ```tsx
 import { Fragment, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createRouter, createPage, slideFadeTransition } from "@aminnairi/react-router";
+import {
+  createRouter,
+  createPage,
+  slideFadeTransition,
+} from "@aminnairi/react-router";
 
 const home = createPage({
   path: "/",
   element: function Page() {
-    return (
-      <h1>Home</h1>
-    );
-  }
+    return <h1>Home</h1>;
+  },
 });
 
 const router = createRouter({
   transition: slideFadeTransition,
-  fallback: () => (
-    <h1>Not found</h1>
-  ),
-  issue: () => (
-    <h1>An error occurred</h1>
-  ),
-  pages: [
-    home
-  ]
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home],
 });
 
 const rootElement = document.getElementById("root");
@@ -433,19 +382,17 @@ const App = () => {
       <main>
         <router.View />
       </main>
-      <footer>
-        Credit © Yourself 2025
-      </footer>
+      <footer>Credit © Yourself 2025</footer>
     </Fragment>
   );
-}
+};
 
 root.render(
   <StrictMode>
     <router.Provider>
       <App />
     </router.Provider>
-  </StrictMode>
+  </StrictMode>,
 );
 ```
 
@@ -459,16 +406,12 @@ import { createRouter, createPage } from "@aminnairi/react-router";
 const home = createPage({
   path: "/",
   element: function Home() {
-    return (
-      <h1>Home</h1>
-    );
-  }
+    return <h1>Home</h1>;
+  },
 });
 
 const router = createRouter({
-  fallback: () => (
-    <h1>Not found</h1>
-  ),
+  fallback: () => <h1>Not found</h1>,
   issue: ({ error, reset }) => (
     <Fragment>
       <h1>Error</h1>
@@ -476,9 +419,7 @@ const router = createRouter({
       <button onClick={reset}>Reset</button>
     </Fragment>
   ),
-  pages: [
-    home
-  ]
+  pages: [home],
 });
 
 const rootElement = document.getElementById("root");
@@ -498,19 +439,17 @@ const App = () => {
       <main>
         <router.View />
       </main>
-      <footer>
-        Credit © Yourself 2025
-      </footer>
+      <footer>Credit © Yourself 2025</footer>
     </Fragment>
   );
-}
+};
 
 root.render(
   <StrictMode>
     <router.Provider>
       <App />
     </router.Provider>
-  </StrictMode>
+  </StrictMode>,
 );
 ```
 
@@ -524,17 +463,13 @@ import { createRouter, createPage, createIssue } from "@aminnairi/react-router";
 const home = createPage({
   path: "/",
   element: function Home() {
-    return (
-      <h1>Home</h1>
-    );
-  }
+    return <h1>Home</h1>;
+  },
 });
 
 const Fallback = () => {
-  return (
-    <h1>Not found</h1>
-  );
-}
+  return <h1>Not found</h1>;
+};
 
 const Issue = createIssue(({ error, reset }) => (
   <Fragment>
@@ -547,9 +482,7 @@ const Issue = createIssue(({ error, reset }) => (
 const router = createRouter({
   fallback: Fallback,
   issue: Issue,
-  pages: [
-    home
-  ]
+  pages: [home],
 });
 
 const rootElement = document.getElementById("root");
@@ -569,19 +502,17 @@ const App = () => {
       <main>
         <router.View />
       </main>
-      <footer>
-        Credit © Yourself 2025
-      </footer>
+      <footer>Credit © Yourself 2025</footer>
     </Fragment>
   );
-}
+};
 
 root.render(
   <StrictMode>
     <router.Provider>
       <App />
     </router.Provider>
-  </StrictMode>
+  </StrictMode>,
 );
 ```
 
@@ -592,15 +523,18 @@ You don't have to manually append this prefix when creating pages, its automatic
 ```tsx
 import { Fragment, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createRouter, createPage, createIssue, useNavigateToPage } from "@aminnairi/react-router";
+import {
+  createRouter,
+  createPage,
+  createIssue,
+  useNavigateToPage,
+} from "@aminnairi/react-router";
 
 const home = createPage({
   path: "/",
   element: function Home() {
-    return (
-      <h1>Home</h1>
-    );
-  }
+    return <h1>Home</h1>;
+  },
 });
 
 const Fallback = () => {
@@ -609,12 +543,10 @@ const Fallback = () => {
   return (
     <Fragment>
       <h1>Not found</h1>
-      <button onClick={() => navigateToHomePage({})}>
-        Go Back Home
-      </button>
+      <button onClick={() => navigateToHomePage({})}>Go Back Home</button>
     </Fragment>
   );
-}
+};
 
 const Issue = createIssue(({ error, reset }) => (
   <Fragment>
@@ -628,9 +560,7 @@ const router = createRouter({
   prefix: "/portfolio",
   fallback: Fallback,
   issue: Issue,
-  pages: [
-    home
-  ]
+  pages: [home],
 });
 
 const rootElement = document.getElementById("root");
@@ -650,19 +580,17 @@ const App = () => {
       <main>
         <router.View />
       </main>
-      <footer>
-        Credit © Yourself 2025
-      </footer>
+      <footer>Credit © Yourself 2025</footer>
     </Fragment>
   );
-}
+};
 
 root.render(
   <StrictMode>
     <router.Provider>
       <App />
     </router.Provider>
-  </StrictMode>
+  </StrictMode>,
 );
 ```
 
@@ -679,10 +607,8 @@ import { createPage, useNavigateToPage } from "@aminnairi/react-router";
 const home = createPage({
   path: "/",
   element: function Home() {
-    return (
-      <h1>Home</h1>
-    );
-  }
+    return <h1>Home</h1>;
+  },
 });
 
 createPage({
@@ -696,7 +622,7 @@ createPage({
         <button onClick={() => navigateToHomePage({})}>Home</button>
       </Fragment>
     );
-  }
+  },
 });
 ```
 
@@ -710,11 +636,9 @@ import { createPage, useNavigateToPage } from "@aminnairi/react-router";
 
 const user = createPage({
   path: "/users/:user",
-  element: function User({ parameters: { user }}) {
-    return (
-      <h1>User#{user}</h1>
-    );
-  }
+  element: function User({ parameters: { user } }) {
+    return <h1>User#{user}</h1>;
+  },
 });
 
 createPage({
@@ -725,10 +649,12 @@ createPage({
     return (
       <Fragment>
         <h1>About</h1>
-        <button onClick={() => navigateToUserPage({ user: "123" })}>Home</button>
+        <button onClick={() => navigateToUserPage({ user: "123" })}>
+          Home
+        </button>
       </Fragment>
     );
-  }
+  },
 });
 ```
 
@@ -744,11 +670,9 @@ import { createPage, useLink } from "@aminnairi/react-router";
 
 const user = createPage({
   path: "/users/:user",
-  element: function User({ parameters: { user }}) {
-    return (
-      <h1>User#{user}</h1>
-    );
-  }
+  element: function User({ parameters: { user } }) {
+    return <h1>User#{user}</h1>;
+  },
 });
 
 createPage({
@@ -762,7 +686,7 @@ createPage({
         <Link parameters={{ user: "123" }}>User#123</Link>
       </Fragment>
     );
-  }
+  },
 });
 ```
 
@@ -804,10 +728,8 @@ createPage({
   element: function OauthCallback() {
     const token = useHash();
 
-    return (
-      <h1>You token is {token}</h1>
-    );
-  }
+    return <h1>You token is {token}</h1>;
+  },
 });
 ```
 
@@ -927,12 +849,27 @@ See [`LICENSE`](./LICENSE).
 
 ### Versions
 
+- [`2.0.1`](#201)
 - [`2.0.0`](#200)
 - [`1.1.0`](#110)
 - [`1.0.1`](#101)
 - [`1.0.0`](#100)
 - [`0.1.1`](#011)
 - [`0.1.0`](#010)
+
+### 2.0.1
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+- Now running a linter with eslint and TypeScript and a stricter configuration to prevent type errors
+
+#### Bug & security fixes
+
+- Fixed an error while the error boundary was not using an override when using a stricter typescript configuration
 
 ### 2.0.0
 
