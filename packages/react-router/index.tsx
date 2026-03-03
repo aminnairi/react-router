@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useEffect, useState, FunctionComponent, useMemo, Component, PropsWithChildren, createContext, SetStateAction, Dispatch, ReactNode, useContext, useCallback, memo, MouseEvent } from "react";
+import { useEffect, useState, FunctionComponent, useMemo, Component, PropsWithChildren, createContext, SetStateAction, Dispatch, ReactNode, useContext, useCallback, memo, MouseEvent, ComponentProps, JSXElementConstructor, ElementType, ComponentPropsWithoutRef, MouseEventHandler } from "react";
 
 export type AbsolutePath<Path extends string> =
   Path extends `${infer Start}:${string}/${infer Rest}`
@@ -228,30 +228,38 @@ export const useHash = () => {
   return hash;
 };
 
-export const useLink = <Path extends string>(page: Page<Path>) => {
-  const Link = memo(({ children, parameters }: { children: ReactNode, parameters: Parameters<Path> }) => {
+export type LinkProps<Path extends string> = {
+  children: ReactNode,
+  parameters: Parameters<Path>
+}
+
+export type UseLinkRenderFunction = (props: { path: string, onClick: MouseEventHandler, children: ReactNode }) => ReactNode
+
+export const useLink = <Path extends string>(page: Page<Path>, render?: UseLinkRenderFunction) => {
+  const Link = memo(({ children, parameters }: LinkProps<Path>) => {
     const { prefix } = useContext(Context);
     const navigateToPage = useNavigateToPage(page);
 
-    const pathWithParameters = useMemo(() => {
+    const path = useMemo(() => {
       return Object.entries(parameters).reduce((previousPath, [parameterName, parameterValue]) => {
         return previousPath.replace(`:${parameterName}`, parameterValue);
       }, sanitizePath(`${prefix ?? ""}/${page.path}`));
     }, [prefix, page, parameters]);
 
-    const navigate = useCallback((event: MouseEvent) => {
+    const onClick = useCallback((event: MouseEvent) => {
       event.preventDefault();
       navigateToPage(parameters);
     }, [navigateToPage, parameters]);
 
+    if (render) {
+      return render({ path, onClick, children });
+    }
+
     return (
-      <a
-        href={pathWithParameters}
-        onClick={navigate}>
+      <a href={path} onClick={onClick}>
         {children}
       </a>
     );
-
   });
 
   return Link;
