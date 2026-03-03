@@ -1,27 +1,37 @@
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
+import MaterialLink from "@mui/material/Link";
 
-import { createPage, useNavigateToPage, useLink } from "@aminnairi/react-router"
+import { createPage, useLink } from "@aminnairi/react-router"
 import { home } from "./home";
 import { user } from "./user";
 
 export const about = createPage({
   path: "/about",
   element: function AboutPage() {
-    const Link = useLink(user);
-    const navigateToHome = useNavigateToPage(home);
+    const HomeLink = useLink(home);
+
+    const UserLink = useLink(user, ({ path, onClick }) => {
+      return (
+        <MaterialLink
+          href={path}
+          onClick={onClick}
+          color="primary">
+          User#123
+        </MaterialLink>
+      );
+    });
 
     return (
       <Stack spacing={3}>
         <Typography variant="h2" align="center">
           About Us
         </Typography>
-        <Button variant="contained" sx={{ alignSelf: "center" }} onClick={navigateToHome}>
+        <HomeLink parameters={{}}>
           Home
-        </Button>
+        </HomeLink>
         <Typography>
-          Or go to the <Link parameters={{ user: "123" }}>user#123</Link> page.
+          Or go to the <UserLink parameters={{ user: "123" }}>User#123</UserLink>
         </Typography>
       </Stack>
     );
