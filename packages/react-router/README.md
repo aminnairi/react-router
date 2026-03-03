@@ -690,6 +690,45 @@ createPage({
 });
 ```
 
+You can also provide a custom render function as the second argument to fully control the rendered output. This is useful when you want to use a different component library or need more control over the markup.
+
+```tsx
+import { Fragment } from "react";
+import { createPage, useLink, UseLinkRenderFunction } from "@aminnairi/react-router";
+
+const user = createPage({
+  path: "/users/:user",
+  element: function User({ parameters: { user } }) {
+    return <h1>User#{user}</h1>;
+  },
+});
+
+createPage({
+  path: "/about",
+  element: function About() {
+    const CustomLink = useLink(user, ({ path, onClick, children }) => {
+      return (
+        <button className="nav-button" onClick={onClick}>
+          {children}
+        </button>
+      );
+    });
+
+    return (
+      <Fragment>
+        <h1>About</h1>
+        <CustomLink parameters={{ user: "123" }}>User#123</CustomLink>
+      </Fragment>
+    );
+  },
+});
+```
+
+The render function receives an object with the following properties:
+- `path`: The computed URL path with parameters filled in
+- `onClick`: The click event handler that prevents default navigation and handles routing
+- `children`: The children passed to the link component
+
 ### useSearch
 
 Allow you to get one or more search query from the URL.
@@ -849,6 +888,7 @@ See [`LICENSE`](./LICENSE).
 
 ### Versions
 
+- [`2.1.0`](#210)
 - [`2.0.1`](#201)
 - [`2.0.0`](#200)
 - [`1.1.0`](#110)
@@ -856,6 +896,21 @@ See [`LICENSE`](./LICENSE).
 - [`1.0.0`](#100)
 - [`0.1.1`](#011)
 - [`0.1.0`](#010)
+
+### 2.1.0
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+- Added optional `render` parameter to `useLink` hook for custom render functions
+- Added `UseLinkRenderFunction` type for custom render function signatures
+
+#### Bug & security fixes
+
+None.
 
 ### 2.0.1
 
