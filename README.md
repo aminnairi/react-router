@@ -1,0 +1,1016 @@
+# @aminnairi/react-router
+
+Type-safe router for the React library
+
+## Requirements
+
+- [Node](https://nodejs.org/)
+- [NPM](https://npmjs.com/)
+
+## Usage
+
+### Project initialization
+
+```bash
+npm create vite -- --template react-ts project
+cd project
+```
+
+### Dependencies installation
+
+```bash
+npm install
+```
+
+### Library installation
+
+```bash
+npm install @aminnairi/react-router
+```
+
+### Setup
+
+```bash
+mkdir src/router
+mkdir src/router/pages
+touch src/router/pages/home.tsx
+```
+
+```tsx
+import { createPage } from "@aminnairi/react-router";
+
+export const home = createPage({
+  path: "/",
+  element: function Home() {
+    return <h1>Home page</h1>;
+  },
+});
+```
+
+```bash
+touch src/router/fallback.tsx
+```
+
+```tsx
+import { useNavigateToPage } from "@aminnairi/react-router";
+import { home } from "./pages/home";
+
+export const Fallback = () => {
+  const navigateToHomePage = useNavigateToPage(home);
+
+  return <button onClick={() => navigateToHomePage({})}>Go back home</button>;
+};
+```
+
+```bash
+touch src/router/issue.tsx
+```
+
+```tsx
+import { Fragment } from "react";
+import { useNavigateToPage } from "@aminnairi/react-router";
+import { home } from "./pages/home";
+
+export const Issue = () => {
+  const navigateToHomePage = useNavigateToPage(home);
+
+  return (
+    <Fragment>
+      <h1>An issue occurred</h1>
+      <button onClick={() => navigateToHomePage({})}>Go back home</button>
+    </Fragment>
+  );
+};
+```
+
+```bash
+touch src/router/index.ts
+```
+
+```ts
+import { createRouter } from "@aminnairi/react-router";
+import { Fallback } from "./fallback";
+import { Issue } from "./issue";
+import { home } from "./pages/home";
+
+export const router = createRouter({
+  fallback: Fallback,
+  issue: Issue,
+  pages: [home],
+});
+```
+
+```bash
+touch src/App.tsx
+```
+
+```tsx
+import { router } from "./router";
+
+export default function App() {
+  return <router.View />;
+}
+```
+
+```bash
+touch src/main.tsx
+```
+
+```tsx
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { router } from "./router";
+import App from "./App";
+
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
+
+createRoot(rootElement).render(
+  <StrictMode>
+    <router.Provider>
+      <App />
+    </router.Provider>
+  </StrictMode>,
+);
+```
+
+### Startup
+
+```bash
+npm run dev
+```
+
+## API
+
+### createPage
+
+Creates a new page definition that can then later be used to create a router. It takes the path of the page to create as well as the element that needs to be rendered when a client navigates to this page.
+
+```tsx
+import { createPage } from "@aminnairi/react-router";
+
+createPage({
+  path: "/",
+  element: function Home() {
+    return <h1>Home</h1>;
+  },
+});
+```
+
+You can then inject the page inside a router.
+
+```tsx
+import { createPage, createRouter } from "@aminnairi/react-router";
+
+const home = createPage({
+  path: "/",
+  element: function Home() {
+    return <h1>Home</h1>;
+  },
+});
+
+createRouter({
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home],
+});
+```
+
+You can define a page that has dynamic parameters, and get back into the element the needed parameters.
+
+```tsx
+import { createPage } from "@aminnairi/react-router";
+
+createPage({
+  path: "/users/:user",
+  element: function User({ parameters: { user } }) {
+    return <h1>User#{user}</h1>;
+  },
+});
+```
+
+And you can have of course more than one dynamic parameter.
+
+```tsx
+import { createPage } from "@aminnairi/react-router";
+
+createPage({
+  path: "/users/:user/articles/:article",
+  element: function UserArticle({ parameters: { user, article } }) {
+    return (
+      <h1>
+        Article#{article} of user#{user}
+      </h1>
+    );
+  },
+});
+```
+
+### useNavigateToPage
+
+You can navigate from one page from another.
+
+```tsx
+import { Fragment } from "react";
+import { createPage, useNavigateToPage } from "@aminnairi/react-router";
+
+const login = createPage({
+  path: "/login",
+  element: function Login() {
+    return <h1>Login</h1>;
+  },
+});
+
+const about = createPage({
+  path: "/about",
+  element: function About() {
+    const navigateToLoginPage = useNavigateToPage(login);
+
+    return (
+      <Fragment>
+        <h1>About Us</h1>
+        <button onClick={() => navigateToLoginPage({})}>Login</button>
+      </Fragment>
+    );
+  },
+});
+
+createPage({
+  path: "/",
+  element: function Home() {
+    const navigateToAboutPage = useNavigateToPage(about);
+
+    return (
+      <Fragment>
+        <h1>Home</h1>
+        <button onClick={() => navigateToAboutPage({})}>About Us</button>
+      </Fragment>
+    );
+  },
+});
+```
+
+And you can of course navigate to pages that have dynamic parameters as well.
+
+```tsx
+import { Fragment } from "react";
+import { createPage, useNavigateToPage } from "@aminnairi/react-router";
+
+const user = createPage({
+  path: "/users/:user",
+  element: function User({ parameters: { user } }) {
+    return <h1>User#{user}</h1>;
+  },
+});
+
+createPage({
+  path: "/",
+  element: function Home() {
+    const navigateToUserPage = useNavigateToPage(user);
+
+    return (
+      <Fragment>
+        <h1>Home</h1>
+        <button onClick={() => navigateToUserPage({ user: "123" })}>
+          User#123
+        </button>
+      </Fragment>
+    );
+  },
+});
+```
+
+### createRouter
+
+Creates a router that you can then use to display the view, which is the page matching the current browser's location.
+
+```tsx
+import { Fragment, StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { createRouter, createPage } from "@aminnairi/react-router";
+
+const home = createPage({
+  path: "/",
+  element: function Home() {
+    return <h1>Home</h1>;
+  },
+});
+
+const router = createRouter({
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home],
+});
+
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
+
+const root = createRoot(rootElement);
+
+const App = () => {
+  return (
+    <Fragment>
+      <header>
+        <h1>App</h1>
+      </header>
+      <main>
+        <router.View />
+      </main>
+      <footer>Credit © Yourself 2025</footer>
+    </Fragment>
+  );
+};
+
+root.render(
+  <StrictMode>
+    <router.Provider>
+      <App />
+    </router.Provider>
+  </StrictMode>,
+);
+```
+
+You can also activate the View Transition Web API if you want before each page renders. This is nice because by default, the browser already has some styling that allows for a smooth and simple transition between pages.
+
+All you have to do is to provide a `transition` function in the arguments of the `createRouter` function. This function receives the navigation direction (`"pushstate"` or `"popstate"`) and a `next` callback to render the next page.
+
+This library also exports a `slideFadeTransition` that you can use out-of-the-box.
+
+```tsx
+import { Fragment, StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import {
+  createRouter,
+  createPage,
+  slideFadeTransition,
+} from "@aminnairi/react-router";
+
+const home = createPage({
+  path: "/",
+  element: function Page() {
+    return <h1>Home</h1>;
+  },
+});
+
+const router = createRouter({
+  transition: slideFadeTransition,
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home],
+});
+
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
+
+const root = createRoot(rootElement);
+
+const App = () => {
+  return (
+    <Fragment>
+      <header>
+        <h1>App</h1>
+      </header>
+      <main>
+        <router.View />
+      </main>
+      <footer>Credit © Yourself 2025</footer>
+    </Fragment>
+  );
+};
+
+root.render(
+  <StrictMode>
+    <router.Provider>
+      <App />
+    </router.Provider>
+  </StrictMode>,
+);
+```
+
+The `createRouter` takes a functional component that allow you to react to error in case a component throws. You can use the props to get a property `error` containing the error that has been thrown as well as a `reset` function that allow you to reset the error.
+
+```tsx
+import { Fragment, StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { createRouter, createPage } from "@aminnairi/react-router";
+
+const home = createPage({
+  path: "/",
+  element: function Home() {
+    return <h1>Home</h1>;
+  },
+});
+
+const router = createRouter({
+  fallback: () => <h1>Not found</h1>,
+  issue: ({ error, reset }) => (
+    <Fragment>
+      <h1>Error</h1>
+      <p>{error.message}</p>
+      <button onClick={reset}>Reset</button>
+    </Fragment>
+  ),
+  pages: [home],
+});
+
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
+
+const root = createRoot(rootElement);
+
+const App = () => {
+  return (
+    <Fragment>
+      <header>
+        <h1>App</h1>
+      </header>
+      <main>
+        <router.View />
+      </main>
+      <footer>Credit © Yourself 2025</footer>
+    </Fragment>
+  );
+};
+
+root.render(
+  <StrictMode>
+    <router.Provider>
+      <App />
+    </router.Provider>
+  </StrictMode>,
+);
+```
+
+You can also define this function from the outside by using the `createIssue` function.
+
+```tsx
+import { Fragment, StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { createRouter, createPage, createIssue } from "@aminnairi/react-router";
+
+const home = createPage({
+  path: "/",
+  element: function Home() {
+    return <h1>Home</h1>;
+  },
+});
+
+const Fallback = () => {
+  return <h1>Not found</h1>;
+};
+
+const Issue = createIssue(({ error, reset }) => (
+  <Fragment>
+    <h1>Error</h1>
+    <p>{error.message}</p>
+    <button onClick={reset}>Reset</button>
+  </Fragment>
+));
+
+const router = createRouter({
+  fallback: Fallback,
+  issue: Issue,
+  pages: [home],
+});
+
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
+
+const root = createRoot(rootElement);
+
+const App = () => {
+  return (
+    <Fragment>
+      <header>
+        <h1>App</h1>
+      </header>
+      <main>
+        <router.View />
+      </main>
+      <footer>Credit © Yourself 2025</footer>
+    </Fragment>
+  );
+};
+
+root.render(
+  <StrictMode>
+    <router.Provider>
+      <App />
+    </router.Provider>
+  </StrictMode>,
+);
+```
+
+You can use a prefix for your routes, useful if you need to publish this app in a scope like GitHub Pages.
+
+You don't have to manually append this prefix when creating pages, its automatically added for you.
+
+```tsx
+import { Fragment, StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import {
+  createRouter,
+  createPage,
+  createIssue,
+  useNavigateToPage,
+} from "@aminnairi/react-router";
+
+const home = createPage({
+  path: "/",
+  element: function Home() {
+    return <h1>Home</h1>;
+  },
+});
+
+const Fallback = () => {
+  const navigateToHomePage = useNavigateToPage(home);
+
+  return (
+    <Fragment>
+      <h1>Not found</h1>
+      <button onClick={() => navigateToHomePage({})}>Go Back Home</button>
+    </Fragment>
+  );
+};
+
+const Issue = createIssue(({ error, reset }) => (
+  <Fragment>
+    <h1>Error</h1>
+    <p>{error.message}</p>
+    <button onClick={reset}>Reset</button>
+  </Fragment>
+));
+
+const router = createRouter({
+  prefix: "/portfolio",
+  fallback: Fallback,
+  issue: Issue,
+  pages: [home],
+});
+
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
+
+const root = createRoot(rootElement);
+
+const App = () => {
+  return (
+    <Fragment>
+      <header>
+        <h1>App</h1>
+      </header>
+      <main>
+        <router.View />
+      </main>
+      <footer>Credit © Yourself 2025</footer>
+    </Fragment>
+  );
+};
+
+root.render(
+  <StrictMode>
+    <router.Provider>
+      <App />
+    </router.Provider>
+  </StrictMode>,
+);
+```
+
+### useNavigateToPage
+
+Allow you to create a function that can then be called to navigate to another page inside a React component.
+
+It accepts a page that has been created using `createPage`.
+
+```tsx
+import { Fragment } from "react";
+import { createPage, useNavigateToPage } from "@aminnairi/react-router";
+
+const home = createPage({
+  path: "/",
+  element: function Home() {
+    return <h1>Home</h1>;
+  },
+});
+
+createPage({
+  path: "/about",
+  element: function About() {
+    const navigateToHomePage = useNavigateToPage(home);
+
+    return (
+      <Fragment>
+        <h1>About</h1>
+        <button onClick={() => navigateToHomePage({})}>Home</button>
+      </Fragment>
+    );
+  },
+});
+```
+
+If this page has dynamic parameters, it forces you to provide them when called inside your component.
+
+The parameters should always be provided as string, as they are the only data type that can be used inside a URL.
+
+```tsx
+import { Fragment } from "react";
+import { createPage, useNavigateToPage } from "@aminnairi/react-router";
+
+const user = createPage({
+  path: "/users/:user",
+  element: function User({ parameters: { user } }) {
+    return <h1>User#{user}</h1>;
+  },
+});
+
+createPage({
+  path: "/about",
+  element: function About() {
+    const navigateToUserPage = useNavigateToPage(user);
+
+    return (
+      <Fragment>
+        <h1>About</h1>
+        <button onClick={() => navigateToUserPage({ user: "123" })}>
+          Home
+        </button>
+      </Fragment>
+    );
+  },
+});
+```
+
+### useLink
+
+Allow you to navigate to another page using a JSX component instead of a callback as for the `useNavigateToPage` hook.
+
+The created component is simply a `<a href="...">{children}</a>` under the hood which prevents the default behavior of the navigator which is to create a new HTTP request and to reload the page. The `href` attribute is computed from the page path and its parameters.
+
+```tsx
+import { Fragment } from "react";
+import { createPage, useLink } from "@aminnairi/react-router";
+
+const user = createPage({
+  path: "/users/:user",
+  element: function User({ parameters: { user } }) {
+    return <h1>User#{user}</h1>;
+  },
+});
+
+createPage({
+  path: "/about",
+  element: function About() {
+    const Link = useLink(user);
+
+    return (
+      <Fragment>
+        <h1>About</h1>
+        <Link parameters={{ user: "123" }}>User#123</Link>
+      </Fragment>
+    );
+  },
+});
+```
+
+You can also provide a custom render function as the second argument to fully control the rendered output. This is useful when you want to use a different component library or need more control over the markup.
+
+```tsx
+import { Fragment } from "react";
+import { createPage, useLink, UseLinkRenderFunction } from "@aminnairi/react-router";
+
+const user = createPage({
+  path: "/users/:user",
+  element: function User({ parameters: { user } }) {
+    return <h1>User#{user}</h1>;
+  },
+});
+
+createPage({
+  path: "/about",
+  element: function About() {
+    const CustomLink = useLink(user, ({ path, onClick, children }) => {
+      return (
+        <button className="nav-button" onClick={onClick}>
+          {children}
+        </button>
+      );
+    });
+
+    return (
+      <Fragment>
+        <h1>About</h1>
+        <CustomLink parameters={{ user: "123" }}>User#123</CustomLink>
+      </Fragment>
+    );
+  },
+});
+```
+
+The render function receives an object with the following properties:
+- `path`: The computed URL path with parameters filled in
+- `onClick`: The click event handler that prevents default navigation and handles routing
+- `children`: The children passed to the link component
+
+### useSearch
+
+Allow you to get one or more search query from the URL.
+
+This will return an instance of the `URLSearchParams` Web API so that you can use you existing knowledge to manipulate the search queries easily.
+
+```tsx
+import { useMemo } from "react";
+import { createPage, useSearch } from "@aminnairi/react-router";
+
+createPage({
+  path: "/users",
+  element: function Home() {
+    const search = useSearch();
+    const sortedByDate = useMemo(() => search.get("sort-by") === "date", [search]);
+
+    return (
+      <h1>Users</h1>
+      <p>Sorted by date: {sortedByDate ? "yes" : "no"}</p>
+    );
+  }
+});
+```
+
+You cannot set the search queries for now, this will be added in future release of this library.
+
+### useHash
+
+Allow you to get the hash, also called fragment, from the URL which is everything after the `#` symbol.
+
+```tsx
+import { createPage, useHash } from "@aminnairi/react-router";
+
+createPage({
+  path: "/oauth/callback",
+  element: function OauthCallback() {
+    const token = useHash();
+
+    return <h1>You token is {token}</h1>;
+  },
+});
+```
+
+## Internal API
+
+### doesRouteMatchPath
+
+Return a boolean in case a route matches a path. A route is a URI that looks something like `/users/:user/articles` and a path is the browser's location pathname that looks something like `/users/123/articles`.
+
+This function is mainly used in the internals of the `createRouter` and in most case should not be necessary.
+
+```typescript
+import { doesRouteMatchPath } from "@aminnairi/react-router";
+
+doesRouteMatchPath("/", "/"); // true
+
+doesRouteMatchPath("/", "/about"); // false
+
+doesRouteMatchPath("/users/:user", "/users/123"); // true
+
+doesRouteMatchPath("/users/:user", "/users/123/articles"); // false
+```
+
+You can also optionally provide a prefix.
+
+```typescript
+import { doesRouteMatchPath } from "@aminnairi/react-router";
+
+doesRouteMatchPath("/", "/github", "/github"); // true
+
+doesRouteMatchPath("/", "/github/about", "/github"); // false
+
+doesRouteMatchPath("/users/:user", "/github/users/123", "/github"); // true
+
+doesRouteMatchPath("/users/:user", "/github/users/123/articles", "/github"); // false
+```
+
+### getParameters
+
+Return an object in case a route matches a path, with its dynamic parameters as output. It returns a generic `object` type in case no dynamic parameters are found in the URI. Note that the parameters are always strings, if you need to, convert them to other types explicitely.
+
+This function is mainly used in the internals of the `createRouter` and in most case should not be necessary.
+
+```typescript
+import { getParameters } from "@aminnairi/react-router";
+
+getParameters("/", "/"); // {}
+
+getParameters("/", "/about"); // {}
+
+getParameters("/users/:user", "/users/123"); // { user: "123" }
+
+getParameters("/users/:user", "/users/123/articles"); // {}
+```
+
+You can also provide an optional prefix.
+
+```typescript
+import { getParameters } from "@aminnairi/react-router";
+
+getParameters("/", "/github", "/github"); // {}
+
+getParameters("/", "/github/about", "/github"); // {}
+
+getParameters("/users/:user", "/github/users/123", "/github"); // { user: "123" }
+
+getParameters("/users/:user", "/github/users/123/articles", "/github"); // {}
+```
+
+### sanitizePath
+
+Internal function that helps normalizing the URL by removing trailing and leading slashes as well as removing any duplicate and unecessary slashes.
+
+```ts
+import { sanitizePath } from "@aminnairi/react-router";
+
+sanitizePath("/"); // "/"
+
+sanitizePath("users"); // "/users"
+
+sanitizePath("users/"); // "/users"
+
+sanitizePath("users//123///articles"); // "/users/123/articles"
+```
+
+## Features
+
+### TypeScript
+
+This library has been written in TypeScript from the ground up, no manual definition types created, only pure TypeScript.
+
+Type-safety has been the #1 goal, this means that you can fearlessly refactor your code without forgetting to update one part of your code that might break, types got you covered.
+
+### No codegen
+
+Code generation is useful in environment where multiple languages may be used, but in the case of a Web application written in TypeScript, there is no need for any codegen at all, thus reducing the surface of errors possibly generated by such tools, and greatly reducing complexity when setting up a router.
+
+### Simplicity
+
+This library does nothing more other than abstracting for your the complexity of using the History Web API, as well as providing you with type safety out of the box.
+
+This means that you can use this library with other popular solutions for handling metadata for instance.
+
+### Transition
+
+Support for the View Transition API is built-in and allows for painless and smooth view transition out-of-the-box. You can create your own transition animation, and the library also exports a `slideFadeTransition` ready to be used.
+
+### Error handling
+
+Never fear having a blank page again when a component throws. This library lets you define a functional component that will answer to any error that might be raised by any pages so that you can react accordingly by providing a nice and friendly error page instead of a blank or white page.
+
+## License
+
+See [`LICENSE`](./LICENSE).
+
+## Changelogs
+
+### Versions
+
+- [`2.1.0`](#210)
+- [`2.0.1`](#201)
+- [`2.0.0`](#200)
+- [`1.1.0`](#110)
+- [`1.0.1`](#101)
+- [`1.0.0`](#100)
+- [`0.1.1`](#011)
+- [`0.1.0`](#010)
+
+### 2.1.0
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+- Added optional `render` parameter to `useLink` hook for custom render functions
+- Added `UseLinkRenderFunction` type for custom render function signatures
+
+#### Bug & security fixes
+
+None.
+
+### 2.0.1
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+- Now running a linter with eslint and TypeScript and a stricter configuration to prevent type errors
+
+#### Bug & security fixes
+
+- Fixed an error while the error boundary was not using an override when using a stricter typescript configuration
+
+### 2.0.0
+
+#### Major changes
+
+- The `transition` property in `createRouter` is now a function instead of a boolean, which allows for more control over the animation. This is a breaking change.
+- A `slideFadeTransition` is now exported and can be used directly.
+
+#### Minor changes
+
+None.
+
+#### Bug & security fixes
+
+None.
+
+### 1.1.0
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+- Added a new `useLink` hook to create components that allow for navigating to another page
+
+#### Bug & security fixes
+
+None.
+
+### 1.0.1
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+None.
+
+#### Bug & security fixes
+
+- Fixed an issue when navigating to a page that already starts with a slash
+
+### 1.0.0
+
+#### Major changes
+
+- The arguments of `findPage` have moved from an object to regular arguments, with the first one being the path, and the second being the current route
+- Removed the `page.navigate` property in favor of the new `useNavigateTo` hook
+- The `createPage` now returns the page directly instead of exposing it in an object
+
+#### Minor changes
+
+- Added a `Provider` component from the created `router` which exposes variables for the children such as the location
+- Added a new `useIsActivePage` hook for the created `router` which helps computing if a given page is active or not
+- Added a new `useSearch` hook for the created `router` for getting search parameters from the current URL
+- Added a new `useHash` hook for the created `router` for getting the URL fragment
+- Added a new `sanitizePath` function for removing unecessary and extra slashes in a given string
+- Added a new `useNavigateTo` hook that replaces the old `page.navigate` function
+- Added a `prefix` property in order to use prefix for routes that need it like GitHub Pages
+
+### 0.1.1
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+None.
+
+#### Bug & security fixes
+
+Fixed peer dependency for react.
+
+### 0.1.0
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+None.
+
+#### Bug & security fixes
+
+None.
