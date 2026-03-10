@@ -1,389 +1,527 @@
-/* eslint-disable */
-import { useEffect, useState, FunctionComponent, useMemo, Component, PropsWithChildren, createContext, SetStateAction, Dispatch, ReactNode, useContext, useCallback, memo, MouseEvent, ComponentProps, JSXElementConstructor, ElementType, ComponentPropsWithoutRef, MouseEventHandler } from "react";
+import { Component, createContext, type Dispatch, type FunctionComponent, type ReactNode, type SetStateAction, useCallback, useContext, useEffect, useEffectEvent, useMemo, useState } from "react";
 
-export type AbsolutePath<Path extends string> =
-  Path extends `${infer Start}:${string}/${infer Rest}`
-  ? `${Start}${string}/${AbsolutePath<Rest>}`
-  : Path extends `${infer Start}:${string}`
-  ? `${Start}${string}`
-  : Path;
-
-export type Parameters<Path extends string> =
-  Path extends `${string}/:${infer Segment}/${infer Rest}`
-  ? { [K in Segment]: string } & Parameters<`/${Rest}`>
-  : Path extends `${string}/:${infer Segment}`
-  ? { [K in Segment]: string }
-  : object;
-
-export type GoToPageFunction<Path extends string> = (path: AbsolutePath<Path>) => void;
-
-export interface PageComponentProps<Path extends string> {
-  parameters: Parameters<Path>,
+export interface IssueProps {
+  error: Error | null,
+  resetError: () => void
 }
 
-export interface Page<Path extends string> {
-  path: Path,
-  element: FunctionComponent<PageComponentProps<Path>>
-}
-
-export type Transition = (direction: NavigationDirection, next: () => void) => void;
-
-export interface CreateRouterOptions<Path extends string> {
-  transition?: Transition,
-  prefix?: string,
-  pages: Array<Page<Path>>
+export interface Router<Path extends string, Locale> {
+  prefix?: string
+  locales?: Locale[]
+  transition?: Transition
   fallback: FunctionComponent
   issue: FunctionComponent<IssueProps>
+  pages: Array<Page<Path>>
 }
 
-export interface FindPageOptions {
-  pages: Array<Page<string>>
+export interface RouterProviderProps {
+  children: ReactNode
+}
+
+export interface RouterContextInterface<Locale> {
+  locale: Locale | null
+  prefix: string | null
   path: string
+  setLocale: Dispatch<SetStateAction<Locale | null>>
 }
 
-export const sanitizePath = (path: string): string => {
-  const sanitizedPath = path.replace(/\/+/g, "/").replace(/^\/|\/$/g, "")
-  return "/" + sanitizedPath;
+export type NavigationDirection = "forward" | "backward";
+
+function normalize(uri: string) {
+  return uri
+    .trim()
+    .toLowerCase()
+    .replace(/\/+/g, "/")
+    .replace(/^\/+|\/$/g, "");
 }
 
+function matchPath(path: string, pathname: string) {
+  const pathParts = normalize(path).split("/").filter(Boolean);
+  const pathnameParts = normalize(pathname).split("/").filter(Boolean);
 
-export const createPage = <Path extends string>(page: Page<Path>) => {
-  return page
+  return pathParts.length === pathnameParts.length && pathParts.every((pathPart, index) => {
+    return pathPart.startsWith(":") || pathPart === pathnameParts.at(index);
+  });
 }
 
-export const doesRouteMatchPath = (path: string, route: string, prefix?: string): boolean => {
-  const pathParts = sanitizePath(`${prefix ?? ""}/${path}`).split("/").filter(Boolean);
-  const routeParts = sanitizePath(route).split("/").filter(Boolean);
+function matchParameters(path: string, pathname: string): Record<string, string> {
+  const pathParts = normalize(path).split("/").filter(Boolean);
+  const pathnameParts = normalize(pathname).split("/").filter(Boolean);
 
-  return (
-    pathParts.length === routeParts.length &&
-    pathParts.every((part, index) => part.startsWith(":") || part === routeParts[index])
-  );
-}
-
-export const getParameters = <Path extends string>(path: Path, route: string, prefix?: string): Parameters<Path> => {
-  if (!doesRouteMatchPath(path, route, prefix)) {
-    return {} as Parameters<Path>;
+  if (pathParts.length !== pathnameParts.length) {
+    return {};
   }
 
-  const pathParts = sanitizePath(`${prefix ?? ""}/${path}`).split("/").filter(Boolean);
-  const routeParts = sanitizePath(route).split("/").filter(Boolean);
-
-  return pathParts.reduce((parameters, pathPart, pathPartIndex) => {
-    const routePart = routeParts[pathPartIndex];
-
-    if (!routePart) {
-      return parameters;
-    }
-
+  return pathParts.reduce((parameters, pathPart, index) => {
     if (!pathPart.startsWith(":")) {
       return parameters;
     }
 
     return {
       ...parameters,
-      [`${pathPart.slice(1)}`]: routePart
+      [pathPart.slice(1)]: pathnameParts.at(index) ?? ""
     }
-  }, {} as Parameters<Path>);
+  }, {});
 }
 
-const findPage = (pages: Array<Page<string>>, path: string, prefix?: string) => {
-  const foundPage = pages.find(route => {
-    return doesRouteMatchPath(sanitizePath(`${prefix ?? ""}/${route.path}`), sanitizePath(path));
-  });
+export class Uri<Locale> {
+  private constructor(public readonly path: string, public readonly prefix: string | null, public readonly locale: Locale | null) { }
 
-  return foundPage;
-};
+  public static from<Locale>(uri: string, expectedPrefix?: string, expectedLocales?: Locale[]): Uri<Locale> {
+    const [prefixOrLocale, localeOrNothing, ...parts] = normalize(uri).split("/");
+    const locales = expectedLocales ?? [];
 
-export interface IssueProps {
-  error: Error,
-  reset: () => void,
+    if (expectedPrefix && prefixOrLocale && prefixOrLocale === normalize(expectedPrefix)) {
+      const locale = locales.find(expectedLocale => expectedLocale === localeOrNothing);
+
+      if (locale) {
+        return new Uri<Locale>(
+          parts.join("/"),
+          prefixOrLocale,
+          locale,
+        );
+      }
+
+      return new Uri<Locale>(
+        [localeOrNothing, ...parts].join("/"),
+        prefixOrLocale,
+        null
+      );
+    }
+
+    const locale = locales.find(expectedLocale => expectedLocale === prefixOrLocale);
+
+    if (locale) {
+      return new Uri<Locale>(
+        [localeOrNothing, ...parts].join("/"),
+        null,
+        locale
+      );
+    }
+
+    return new Uri<Locale>(
+      [prefixOrLocale, localeOrNothing, ...parts].join("/"),
+      null,
+      null
+    );
+  }
 }
 
-export interface ErrorBoundaryProps {
-  fallback: FunctionComponent<IssueProps>,
-  transition?: Transition
+export type ExtractParams<Path extends string> =
+  Path extends `${string}:${infer Param}/${infer Rest}`
+  ? Param | ExtractParams<Rest>
+  : Path extends `${string}:${infer Param}`
+  ? Param
+  : never
+
+export type Params<Path extends string> = {
+  [Key in ExtractParams<Path>]: string
 }
 
-export interface ErrorBoundaryState {
-  error: Error | null
+export interface PageParams<Path extends string> {
+  parameters: Params<Path>
 }
 
-export class ErrorBoundary extends Component<PropsWithChildren<ErrorBoundaryProps>, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
+export interface Page<Path extends string> {
+  path: Path
+  element: FunctionComponent<PageParams<Path>>
+}
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  issue: FunctionComponent<IssueProps>;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, IssueProps> {
+  public constructor(props: ErrorBoundaryProps) {
     super(props);
 
-    this.state = { error: null };
+    this.state = {
+      error: null,
+      resetError: this.resetError.bind(this)
+    };
   }
 
-  public static getDerivedStateFromError(error: unknown) {
-    const normalizedError = error instanceof Error ? error : new Error(String(error));
+  private resetError() {
+    this.setState({ error: null });
+  }
 
-    return { error: normalizedError };
+  public static getDerivedStateFromError(error: Error) {
+    return {
+      error
+    };
+  }
+
+  public override componentDidCatch(error: unknown) {
+    this.setState({
+      error: error instanceof Error ? error : new Error(String(error))
+    });
   }
 
   public override render() {
-    const viewTransitionSupported = typeof document.startViewTransition === "function";
-
     if (this.state.error) {
-      const reset = () => {
-        if (this.props.transition && viewTransitionSupported) {
-          document.startViewTransition(() => {
-            this.setState({
-              error: null
-            });
-          });
+      const Issue = this.props.issue;
 
-          return;
-        }
-
-        this.setState({
-          error: null
-        });
-      }
-
-      return this.props.fallback({
-        error: this.state.error,
-        reset
-      });
+      return <Issue error={this.state.error} resetError={this.state.resetError} />;
     }
 
     return this.props.children;
   }
 }
 
-export const createIssue = (issue: FunctionComponent<IssueProps>) => {
-  return issue;
+export function createPage<Path extends string>(page: Page<Path>): Page<Path> {
+  return {
+    ...page,
+    path: normalize(page.path) as Path
+  };
 }
 
-export interface ContextInterface {
-  prefix: string,
-  pathname: string,
-  setPathname: Dispatch<SetStateAction<string>>,
-  search: URLSearchParams,
-  setSearch: Dispatch<SetStateAction<URLSearchParams>>,
-  hash: string,
-  setHash: Dispatch<SetStateAction<string>>
-}
+export type Transition = (direction: "forward" | "backward", next: () => void) => void;
 
-export interface ProviderProps {
-  children: ReactNode
-}
+export const scaleFadeTransition: Transition = async (direction: NavigationDirection, next) => {
+  try {
+    const transition = document.startViewTransition(() => {
+      next();
+    });
 
-const Context = createContext<ContextInterface>({
-  prefix: "",
-  pathname: sanitizePath(window.location.pathname),
-  setPathname: () => { },
-  search: new URLSearchParams(),
-  setSearch: () => { },
-  hash: window.location.hash,
-  setHash: () => { }
-});
+    await transition.ready;
 
-enum NavigationDirection {
-  Forward = "pushstate",
-  Backward = "popstate"
-}
-
-export const useNavigateToPage = <Path extends string>(page: Page<Path>) => {
-  const { prefix } = useContext(Context);
-
-  return useCallback((parameters: Parameters<Path>, replace: boolean = false) => {
-    const initialPath = sanitizePath(`${prefix ?? ""}/${page.path}`);
-
-    const pathWithParameters = Object.entries(parameters).reduce((path, [parameterName, parameterValue]) => {
-      return path.replace(`:${parameterName}`, parameterValue);
-    }, initialPath);
-
-    if (replace) {
-      window.history.replaceState(null, pathWithParameters, pathWithParameters);
-    } else {
-      window.history.pushState(null, pathWithParameters, pathWithParameters);
-    }
-
-    window.dispatchEvent(new CustomEvent(NavigationDirection.Forward));
-  }, [page, prefix]);
-};
-
-export const useNavigateBack = () => {
-  return useCallback(() => {
-    window.dispatchEvent(new CustomEvent(NavigationDirection.Backward));
-  }, []);
-}
-
-export const useIsActivePage = (page: Page<string>) => {
-  const { pathname, prefix } = useContext(Context);
-
-  return doesRouteMatchPath(sanitizePath(page.path), sanitizePath(pathname), prefix);
-};
-
-export const useSearch = () => {
-  const { search } = useContext(Context);
-
-  return search;
-};
-
-export const useHash = () => {
-  const { hash } = useContext(Context);
-  return hash;
-};
-
-export type LinkProps<Path extends string> = {
-  children: ReactNode,
-  parameters: Parameters<Path>
-}
-
-export type UseLinkRenderFunction = (props: { path: string, onClick: MouseEventHandler, children: ReactNode }) => ReactNode
-
-export const useLink = <Path extends string>(page: Page<Path>, render?: UseLinkRenderFunction) => {
-  const Link = memo(({ children, parameters }: LinkProps<Path>) => {
-    const { prefix } = useContext(Context);
-    const navigateToPage = useNavigateToPage(page);
-
-    const path = useMemo(() => {
-      return Object.entries(parameters).reduce((previousPath, [parameterName, parameterValue]) => {
-        return previousPath.replace(`:${parameterName}`, parameterValue);
-      }, sanitizePath(`${prefix ?? ""}/${page.path}`));
-    }, [prefix, page, parameters]);
-
-    const onClick = useCallback((event: MouseEvent) => {
-      event.preventDefault();
-      navigateToPage(parameters);
-    }, [navigateToPage, parameters]);
-
-    if (render) {
-      return render({ path, onClick, children });
-    }
-
-    return (
-      <a href={path} onClick={onClick}>
-        {children}
-      </a>
+    document.documentElement.animate(
+      [
+        {
+          transform: 'scale(1)',
+          opacity: 1
+        },
+        {
+          transform: direction === "forward" ? "scale(1.04)" : "scale(0.96)",
+          opacity: 0
+        }
+      ],
+      {
+        duration: 200,
+        easing: "ease-in-out",
+        fill: "both",
+        pseudoElement: `::view-transition-old(root)`,
+      }
     );
-  });
 
-  return Link;
-};
-
-export const slideFadeTransition: Transition = async (direction: NavigationDirection, next) => {
-  const transition = document.startViewTransition(() => {
-    next();
-  });
-
-  await transition.ready;
-
-  document.documentElement.animate(
-    [
-      { transform: 'translateX(0)', opacity: 1 },
-      { transform: `translateX(${direction === NavigationDirection.Forward ? '100%' : '-100%'})`, opacity: 0 }
-    ],
-    {
-      duration: 250,
-      easing: "ease-in-out",
-      fill: "both",
-      pseudoElement: "::view-transition-old(root)",
-    }
-  );
-
-  document.documentElement.animate(
-    [
-      { transform: `translateX(${direction === NavigationDirection.Forward ? '-100%' : '100%'})`, opacity: 0 },
-      { transform: 'translateX(0)', opacity: 1 }
-    ],
-    {
-      duration: 250,
-      easing: "ease-in-out",
-      fill: "both",
-      pseudoElement: "::view-transition-new(root)",
-    }
-  );
+    document.documentElement.animate(
+      [
+        {
+          transform: direction === "forward" ? "scale(0.96)" : "scale(1.04)",
+          opacity: 0
+        },
+        {
+          transform: 'scale(1)',
+          opacity: 1
+        }
+      ],
+      {
+        duration: 200,
+        easing: "ease-in-out",
+        fill: "both",
+        pseudoElement: `::view-transition-new(root)`,
+      }
+    );
+  } catch (error) {
+    console.error(error);
+  }
 }
 
-export const createRouter = <Path extends string>({ pages, fallback, transition, issue, prefix }: CreateRouterOptions<Path>) => {
-  const Provider = ({ children }: ProviderProps) => {
-    const [pathname, setPathname] = useState(sanitizePath(window.location.pathname));
-    const [search, setSearch] = useState(new URLSearchParams(sanitizePath(window.location.search)));
-    const [hash, setHash] = useState(window.location.hash);
+export const crossFadeTransition: Transition = async (direction: NavigationDirection, next) => {
+  try {
+    const transition = document.startViewTransition(() => {
+      next();
+    });
 
-    const value = useMemo(() => {
-      return {
-        prefix: prefix ?? "",
-        pathname,
-        search,
-        hash,
-        setPathname,
-        setSearch,
-        setHash
-      };
-    }, [prefix, pathname, search, hash]);
+    await transition.ready;
 
-    useEffect(() => {
-      const onNavigation = async (direction: NavigationDirection) => {
-        if (transition) {
-          transition(direction, () => {
-            setPathname(sanitizePath(window.location.pathname));
-          });
+    document.documentElement.animate(
+      [
+        { opacity: 1 },
+        { opacity: 0 }
+      ],
+      {
+        duration: 200,
+        easing: "ease-in-out",
+        fill: "both",
+        pseudoElement: `::view-transition-old(root)`,
+      }
+    );
 
+    document.documentElement.animate(
+      [
+        { opacity: 0 },
+        { opacity: 1 }
+      ],
+      {
+        duration: 200,
+        easing: "ease-in-out",
+        fill: "both",
+        pseudoElement: `::view-transition-new(root)`,
+      }
+    );
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export const slideHorizontalTransition: Transition = async (direction: NavigationDirection, next) => {
+  try {
+    const transition = document.startViewTransition(() => {
+      next();
+    });
+
+    await transition.ready;
+
+    document.documentElement.animate(
+      [
+        { transform: 'translateX(0)' },
+        { transform: direction === "forward" ? 'translateX(-100%)' : 'translateX(100%)' }
+      ],
+      {
+        duration: 200,
+        easing: "ease-in-out",
+        fill: "both",
+        pseudoElement: `::view-transition-old(root)`,
+      }
+    );
+
+    document.documentElement.animate(
+      [
+        { transform: direction === "forward" ? 'translateX(100%)' : 'translateX(-100%)' },
+        { transform: 'translateX(0)' }
+      ],
+      {
+        duration: 200,
+        easing: "ease-in-out",
+        fill: "both",
+        pseudoElement: `::view-transition-new(root)`,
+      }
+    );
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export const slideVerticalTransition: Transition = async (direction: NavigationDirection, next) => {
+  try {
+    const transition = document.startViewTransition(() => {
+      next();
+    });
+
+    await transition.ready;
+
+    document.documentElement.animate(
+      [
+        { transform: 'translateY(0)' },
+        { transform: direction === "forward" ? 'translateY(-100%)' : 'translateY(100%)' }
+      ],
+      {
+        duration: 200,
+        easing: "ease-in-out",
+        fill: "both",
+        pseudoElement: `::view-transition-old(root)`,
+      }
+    );
+
+    document.documentElement.animate(
+      [
+        { transform: direction === "forward" ? 'translateY(100%)' : 'translateY(-100%)' },
+        { transform: 'translateY(0)' }
+      ],
+      {
+        duration: 200,
+        easing: "ease-in-out",
+        fill: "both",
+        pseudoElement: `::view-transition-new(root)`,
+      }
+    );
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export function createRouter<Locale extends string = never, Path extends string = never>({ prefix: expectedPrefix, locales, pages, fallback: Fallback, issue: Issue, transition }: Router<Path, Locale>) {
+  const RouterContext = createContext<RouterContextInterface<Locale>>({
+    locale: null,
+    prefix: null,
+    path: "/",
+    setLocale: () => { },
+  });
+
+
+  function useIsActivePage<P extends Path>(page: Page<P>): boolean {
+    const { path } = usePath();
+    return matchPath(page.path, path);
+  }
+
+  function useLocale() {
+    const context = useContext(RouterContext);
+
+    if (!context) {
+      throw new Error("component using the useLocale hook has not been wrapped inside RouterProvider.");
+    }
+
+    return {
+      locale: context.locale,
+      setLocale: (locale: Locale) => {
+        if (!locales?.includes(locale)) {
           return;
         }
 
-        setPathname(sanitizePath(window.location.pathname));
+        window.history.pushState(null, "", `/${normalize(`${context.prefix ?? ""}/${locale}/${context.path}`)}`);
+        window.dispatchEvent(new Event("pushstate"));
+      }
+    }
+  }
+
+  function usePrefix() {
+    const context = useContext(RouterContext);
+
+    if (!context) {
+      throw new Error("Component using the usePrefix hook has not been wrapped inside RouterProvider");
+    }
+
+    return {
+      prefix: context.prefix
+    };
+  }
+
+  function usePath() {
+    const context = useContext(RouterContext);
+
+    if (!context) {
+      throw new Error("Component using the usePath hook has not been wrapped inside RouterProvider");
+    }
+
+    return {
+      path: context.path,
+    };
+  }
+
+  function useNavigateToPage<P extends Path>(page: Page<P>) {
+    const { locale } = useLocale();
+    const { prefix } = usePrefix();
+
+    return useCallback((...[params]: ExtractParams<P> extends never ? [] : [Params<P>]) => {
+      const path = Object.entries(params ?? {}).reduce<string>((oldParams, [name, value]) => {
+        return oldParams.replace(`:${name}`, String(value));
+      }, page.path);
+
+      const pathname = `/${normalize(`${prefix ?? ""}/${locale ?? ""}/${path}`)}`
+
+      console.log({ pathname });
+
+      window.history.pushState(null, "", pathname);
+      window.dispatchEvent(new Event("pushstate"));
+    }, [page, locale, prefix]);
+  }
+
+  function RouterProvider({ children }: RouterProviderProps) {
+    const uri = useMemo(() => Uri.from(window.location.pathname, expectedPrefix, locales), [expectedPrefix, locales]);
+    const [locale, setLocale] = useState(uri.locale);
+    const [path, setPath] = useState(uri.path);
+    const [prefix, setPrefix] = useState(uri.prefix);
+
+    function setHash(newHash: string) {
+      window.location.hash = newHash;
+    }
+
+    const value = useMemo(() => {
+      return {
+        locale,
+        path,
+        prefix: prefix ?? null,
+        setLocale,
+        setHash,
+      };
+    }, [locale, prefix, path]);
+
+    const onNavigation = useEffectEvent((direction: NavigationDirection) => {
+      const pathname = normalize(window.location.pathname);
+      const uri = Uri.from(pathname, expectedPrefix, locales);
+
+      const defaultTransition: Transition = (_, next) => {
+        next();
       }
 
-      const onNavigationForward = () => {
-        onNavigation(NavigationDirection.Forward);
-      };
+      const currentTransition: Transition = transition ?? defaultTransition;
 
-      const onNavigationBackward = () => {
-        onNavigation(NavigationDirection.Backward);
-      };
+      currentTransition(direction, () => {
+        setLocale(uri.locale);
+        setPath(uri.path);
+        setPrefix(uri.prefix);
+      });
+    });
 
-      window.addEventListener(NavigationDirection.Forward, onNavigationForward);
-      window.addEventListener(NavigationDirection.Backward, onNavigationBackward);
+    const onMount = useEffectEvent(() => {
+      const pathname = `/${normalize(window.location.pathname)}`;
+      const uri = Uri.from(pathname, expectedPrefix, [locale, ...locales ?? []]);
+      const newPathname = `/${normalize(`${uri.prefix ?? expectedPrefix ?? ""}/${uri.locale ?? locales?.at(0) ?? ""}/${uri.path}`)}`;
+
+      if (newPathname !== pathname) {
+        window.history.pushState(null, "", newPathname);
+        window.dispatchEvent(new Event("pushstate"));
+      }
+    });
+
+    useEffect(() => {
+      const abortController = new AbortController();
+
+      window.addEventListener("pushstate", () => {
+        onNavigation("forward");
+      }, abortController);
+
+      window.addEventListener("popstate", () => {
+        onNavigation("backward");
+      }, abortController);
+
+      onMount();
 
       return () => {
-        window.removeEventListener(NavigationDirection.Forward, onNavigationForward);
-        window.removeEventListener(NavigationDirection.Backward, onNavigationBackward);
-      }
+        abortController.abort();
+      };
     }, []);
 
     return (
-      <Context.Provider value={value}>
-        <ErrorBoundary fallback={issue}>
-          {children}
-        </ErrorBoundary>
-      </Context.Provider>
+      <RouterContext.Provider value={value}>
+        {children}
+      </RouterContext.Provider>
     );
-  };
+  }
 
-  const View = () => {
-    const Fallback = useMemo(() => fallback, []);
-    const { pathname } = useContext(Context);
-    const page = useMemo(() => findPage(pages, pathname, prefix), [pathname]);
+  function RouterView() {
+    const { path } = usePath();
 
-    const parameters = useMemo(() => {
-      if (page) {
-        return getParameters(sanitizePath(page.path), sanitizePath(window.location.pathname), prefix);
-      }
+    const foundPage = useMemo(() => {
+      return pages.find(page => {
+        return matchPath(page.path, path);
+      });
+    }, [path, pages]);
 
-      return {};
-    }, [page]);
-
-    if (page) {
+    if (foundPage) {
       return (
-        <div >
-          <page.element parameters={parameters} />
-        </div>
+        <ErrorBoundary issue={Issue}>
+          <foundPage.element parameters={matchParameters(foundPage.path, path) as Params<Path>} />
+        </ErrorBoundary>
       );
     }
 
     return (
-      <Fallback />
+      <ErrorBoundary issue={Issue}>
+        <Fallback />
+      </ErrorBoundary>
     );
-  };
+  }
 
   return {
-    View,
-    Provider,
+    RouterProvider,
+    RouterView,
+    useLocale,
+    usePrefix,
+    usePath,
+    useNavigateToPage,
+    useIsActivePage,
   };
 }
