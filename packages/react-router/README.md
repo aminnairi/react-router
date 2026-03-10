@@ -88,21 +88,8 @@ touch src/router/fallback.tsx
 ```
 
 ```tsx
-import { Fragment } from "react";
-import { createPage, createRouter } from "@aminnairi/react-router";
-
-export const home = createPage({
-  path: "/",
-  element: function Home() {
-    return <h1>Home page</h1>;
-  },
-});
-
-const { useNavigateToPage } = createRouter({
-  fallback: () => <h1>Not found</h1>,
-  issue: () => <h1>An error occurred</h1>,
-  pages: [home],
-});
+import { useNavigateToPage } from ".";
+import { home } from "./pages/home";
 
 export const Fallback = () => {
   const navigateToHomePage = useNavigateToPage(home);
@@ -117,20 +104,8 @@ touch src/router/issue.tsx
 
 ```tsx
 import { Fragment } from "react";
-import { createPage, createRouter } from "@aminnairi/react-router";
-
-export const home = createPage({
-  path: "/",
-  element: function Home() {
-    return <h1>Home page</h1>;
-  },
-});
-
-const { useNavigateToPage } = createRouter({
-  fallback: () => <h1>Not found</h1>,
-  issue: () => <h1>An error occurred</h1>,
-  pages: [home],
-});
+import { useNavigateToPage } from ".";
+import { home } from "./pages/home";
 
 export const Issue = () => {
   const navigateToHomePage = useNavigateToPage(home);
@@ -154,7 +129,7 @@ import { Fallback } from "./fallback";
 import { Issue } from "./issue";
 import { home } from "./pages/home";
 
-export const { RouterProvider, RouterView } = createRouter({
+export const { RouterProvider, RouterView, useNavigateToPage } = createRouter({
   fallback: Fallback,
   issue: Issue,
   pages: [home],
@@ -533,7 +508,7 @@ You can also define the issue component from the outside.
 ```tsx
 import { Fragment, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createRouter, createPage } from "@aminnairi/react-router";
+import { createRouter, createPage, IssueProps } from "@aminnairi/react-router";
 
 const home = createPage({
   path: "/",
@@ -546,7 +521,7 @@ const Fallback = () => {
   return <h1>Not found</h1>;
 };
 
-const Issue = ({ error, resetError }: { error: Error; resetError: () => void }) => (
+const Issue = ({ error, resetError }: IssueProps) => (
   <Fragment>
     <h1>Error</h1>
     <p>{error.message}</p>
@@ -601,6 +576,7 @@ import { createRoot } from "react-dom/client";
 import {
   createRouter,
   createPage,
+  IssueProps,
 } from "@aminnairi/react-router";
 
 const home = createPage({
@@ -621,7 +597,7 @@ const Fallback = () => {
   );
 };
 
-const Issue = ({ error, resetError }: { error: Error; resetError: () => void }) => (
+const Issue = ({ error, resetError }: IssueProps) => (
   <Fragment>
     <h1>Error</h1>
     <p>{error.message}</p>
@@ -983,6 +959,8 @@ None.
 #### Bug & security fixes
 
 - Fixed incorrect imports in documentation - hooks like `useNavigateToPage`, `useIsActivePage`, `useLocale`, `usePrefix`, and `usePath` are returned from `createRouter` and should not be imported directly from the package
+- Fixed file structure in documentation setup guide to properly separate files and avoid duplicate code definitions
+- Updated issue component examples to use exported `IssueProps` type instead of inline type definitions
 
 ### 3.0.0
 
