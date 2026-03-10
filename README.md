@@ -2,6 +2,42 @@
 
 Type-safe router for the React library
 
+## Documentation
+
+- [Requirements](#requirements)
+- [Usage](#usage)
+  - [Project initialization](#project-initialization)
+  - [Dependencies installation](#dependencies-installation)
+  - [Library installation](#library-installation)
+  - [Setup](#setup)
+  - [Startup](#startup)
+- [API](#api)
+  - [createPage](#createpage)
+  - [useNavigateToPage](#usenavigatetopage)
+  - [createRouter](#createrouter)
+  - [useIsActivePage](#useisactivepage)
+  - [useLocale](#uselocale)
+  - [usePrefix](#useprefix)
+  - [usePath](#usepath)
+- [Features](#features)
+  - [TypeScript](#typescript)
+  - [No codegen](#no-codegen)
+  - [Simplicity](#simplicity)
+  - [Transition](#transition)
+  - [Error handling](#error-handling)
+- [License](#license)
+- [Changelogs](#changelogs)
+  - [Versions](#versions)
+  - [3.0.0](#300)
+  - [2.1.0](#210)
+  - [2.0.1](#201)
+  - [2.0.0](#200)
+  - [1.1.0](#110)
+  - [1.0.1](#101)
+  - [1.0.0](#100)
+  - [0.1.1](#011)
+  - [0.1.0](#010)
+
 ## Requirements
 
 - [Node](https://nodejs.org/)
@@ -58,7 +94,7 @@ import { home } from "./pages/home";
 export const Fallback = () => {
   const navigateToHomePage = useNavigateToPage(home);
 
-  return <button onClick={() => navigateToHomePage({})}>Go back home</button>;
+  return <button onClick={navigateToHomePage}>Go back home</button>;
 };
 ```
 
@@ -77,7 +113,7 @@ export const Issue = () => {
   return (
     <Fragment>
       <h1>An issue occurred</h1>
-      <button onClick={() => navigateToHomePage({})}>Go back home</button>
+      <button onClick={navigateToHomePage}>Go back home</button>
     </Fragment>
   );
 };
@@ -93,7 +129,7 @@ import { Fallback } from "./fallback";
 import { Issue } from "./issue";
 import { home } from "./pages/home";
 
-export const router = createRouter({
+export const { RouterProvider, RouterView } = createRouter({
   fallback: Fallback,
   issue: Issue,
   pages: [home],
@@ -105,10 +141,10 @@ touch src/App.tsx
 ```
 
 ```tsx
-import { router } from "./router";
+import { RouterView } from "./router";
 
 export default function App() {
-  return <router.View />;
+  return <RouterView />;
 }
 ```
 
@@ -119,7 +155,7 @@ touch src/main.tsx
 ```tsx
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { router } from "./router";
+import { RouterProvider } from "./router";
 import App from "./App";
 
 const rootElement = document.getElementById("root");
@@ -130,9 +166,9 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <router.Provider>
+    <RouterProvider>
       <App />
-    </router.Provider>
+    </RouterProvider>
   </StrictMode>,
 );
 ```
@@ -232,7 +268,7 @@ const about = createPage({
     return (
       <Fragment>
         <h1>About Us</h1>
-        <button onClick={() => navigateToLoginPage({})}>Login</button>
+        <button onClick={navigateToLoginPage}>Login</button>
       </Fragment>
     );
   },
@@ -246,7 +282,7 @@ createPage({
     return (
       <Fragment>
         <h1>Home</h1>
-        <button onClick={() => navigateToAboutPage({})}>About Us</button>
+        <button onClick={navigateToAboutPage}>About Us</button>
       </Fragment>
     );
   },
@@ -299,7 +335,7 @@ const home = createPage({
   },
 });
 
-const router = createRouter({
+const { RouterProvider, RouterView } = createRouter({
   fallback: () => <h1>Not found</h1>,
   issue: () => <h1>An error occurred</h1>,
   pages: [home],
@@ -320,7 +356,7 @@ const App = () => {
         <h1>App</h1>
       </header>
       <main>
-        <router.View />
+        <RouterView />
       </main>
       <footer>Credit © Yourself 2025</footer>
     </Fragment>
@@ -329,18 +365,18 @@ const App = () => {
 
 root.render(
   <StrictMode>
-    <router.Provider>
+    <RouterProvider>
       <App />
-    </router.Provider>
+    </RouterProvider>
   </StrictMode>,
 );
 ```
 
 You can also activate the View Transition Web API if you want before each page renders. This is nice because by default, the browser already has some styling that allows for a smooth and simple transition between pages.
 
-All you have to do is to provide a `transition` function in the arguments of the `createRouter` function. This function receives the navigation direction (`"pushstate"` or `"popstate"`) and a `next` callback to render the next page.
+All you have to do is to provide a `transition` function in the arguments of the `createRouter` function. This function receives the navigation direction (`"forward"` or `"backward"`) and a `next` callback to render the next page.
 
-This library also exports a `slideFadeTransition` that you can use out-of-the-box.
+This library also exports several transitions that you can use out-of-the-box: `slideHorizontalTransition`, `slideVerticalTransition`, `crossFadeTransition`, and `scaleFadeTransition`.
 
 ```tsx
 import { Fragment, StrictMode } from "react";
@@ -348,7 +384,7 @@ import { createRoot } from "react-dom/client";
 import {
   createRouter,
   createPage,
-  slideFadeTransition,
+  slideHorizontalTransition,
 } from "@aminnairi/react-router";
 
 const home = createPage({
@@ -358,8 +394,8 @@ const home = createPage({
   },
 });
 
-const router = createRouter({
-  transition: slideFadeTransition,
+const { RouterProvider, RouterView } = createRouter({
+  transition: slideHorizontalTransition,
   fallback: () => <h1>Not found</h1>,
   issue: () => <h1>An error occurred</h1>,
   pages: [home],
@@ -380,7 +416,7 @@ const App = () => {
         <h1>App</h1>
       </header>
       <main>
-        <router.View />
+        <RouterView />
       </main>
       <footer>Credit © Yourself 2025</footer>
     </Fragment>
@@ -389,9 +425,9 @@ const App = () => {
 
 root.render(
   <StrictMode>
-    <router.Provider>
+    <RouterProvider>
       <App />
-    </router.Provider>
+    </RouterProvider>
   </StrictMode>,
 );
 ```
@@ -410,13 +446,13 @@ const home = createPage({
   },
 });
 
-const router = createRouter({
+const { RouterProvider, RouterView } = createRouter({
   fallback: () => <h1>Not found</h1>,
-  issue: ({ error, reset }) => (
+  issue: ({ error, resetError }) => (
     <Fragment>
       <h1>Error</h1>
       <p>{error.message}</p>
-      <button onClick={reset}>Reset</button>
+      <button onClick={resetError}>Reset</button>
     </Fragment>
   ),
   pages: [home],
@@ -437,7 +473,7 @@ const App = () => {
         <h1>App</h1>
       </header>
       <main>
-        <router.View />
+        <RouterView />
       </main>
       <footer>Credit © Yourself 2025</footer>
     </Fragment>
@@ -446,19 +482,19 @@ const App = () => {
 
 root.render(
   <StrictMode>
-    <router.Provider>
+    <RouterProvider>
       <App />
-    </router.Provider>
+    </RouterProvider>
   </StrictMode>,
 );
 ```
 
-You can also define this function from the outside by using the `createIssue` function.
+You can also define the issue component from the outside.
 
 ```tsx
 import { Fragment, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createRouter, createPage, createIssue } from "@aminnairi/react-router";
+import { createRouter, createPage } from "@aminnairi/react-router";
 
 const home = createPage({
   path: "/",
@@ -471,15 +507,15 @@ const Fallback = () => {
   return <h1>Not found</h1>;
 };
 
-const Issue = createIssue(({ error, reset }) => (
+const Issue = ({ error, resetError }: { error: Error; resetError: () => void }) => (
   <Fragment>
     <h1>Error</h1>
     <p>{error.message}</p>
-    <button onClick={reset}>Reset</button>
+    <button onClick={resetError}>Reset</button>
   </Fragment>
-));
+);
 
-const router = createRouter({
+const { RouterProvider, RouterView } = createRouter({
   fallback: Fallback,
   issue: Issue,
   pages: [home],
@@ -500,7 +536,7 @@ const App = () => {
         <h1>App</h1>
       </header>
       <main>
-        <router.View />
+        <RouterView />
       </main>
       <footer>Credit © Yourself 2025</footer>
     </Fragment>
@@ -509,9 +545,9 @@ const App = () => {
 
 root.render(
   <StrictMode>
-    <router.Provider>
+    <RouterProvider>
       <App />
-    </router.Provider>
+    </RouterProvider>
   </StrictMode>,
 );
 ```
@@ -526,7 +562,6 @@ import { createRoot } from "react-dom/client";
 import {
   createRouter,
   createPage,
-  createIssue,
   useNavigateToPage,
 } from "@aminnairi/react-router";
 
@@ -543,20 +578,20 @@ const Fallback = () => {
   return (
     <Fragment>
       <h1>Not found</h1>
-      <button onClick={() => navigateToHomePage({})}>Go Back Home</button>
+      <button onClick={navigateToHomePage}>Go Back Home</button>
     </Fragment>
   );
 };
 
-const Issue = createIssue(({ error, reset }) => (
+const Issue = ({ error, resetError }: { error: Error; resetError: () => void }) => (
   <Fragment>
     <h1>Error</h1>
     <p>{error.message}</p>
-    <button onClick={reset}>Reset</button>
+    <button onClick={resetError}>Reset</button>
   </Fragment>
-));
+);
 
-const router = createRouter({
+const { RouterProvider, RouterView } = createRouter({
   prefix: "/portfolio",
   fallback: Fallback,
   issue: Issue,
@@ -578,7 +613,7 @@ const App = () => {
         <h1>App</h1>
       </header>
       <main>
-        <router.View />
+        <RouterView />
       </main>
       <footer>Credit © Yourself 2025</footer>
     </Fragment>
@@ -587,9 +622,9 @@ const App = () => {
 
 root.render(
   <StrictMode>
-    <router.Provider>
+    <RouterProvider>
       <App />
-    </router.Provider>
+    </RouterProvider>
   </StrictMode>,
 );
 ```
@@ -600,15 +635,23 @@ Allow you to create a function that can then be called to navigate to another pa
 
 It accepts a page that has been created using `createPage`.
 
+Note: This hook is returned from `createRouter`, not imported directly from the library.
+
 ```tsx
 import { Fragment } from "react";
-import { createPage, useNavigateToPage } from "@aminnairi/react-router";
+import { createPage, createRouter } from "@aminnairi/react-router";
 
 const home = createPage({
   path: "/",
   element: function Home() {
     return <h1>Home</h1>;
   },
+});
+
+const { useNavigateToPage } = createRouter({
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home],
 });
 
 createPage({
@@ -619,7 +662,7 @@ createPage({
     return (
       <Fragment>
         <h1>About</h1>
-        <button onClick={() => navigateToHomePage({})}>Home</button>
+        <button onClick={navigateToHomePage}>Home</button>
       </Fragment>
     );
   },
@@ -632,13 +675,19 @@ The parameters should always be provided as string, as they are the only data ty
 
 ```tsx
 import { Fragment } from "react";
-import { createPage, useNavigateToPage } from "@aminnairi/react-router";
+import { createPage, createRouter } from "@aminnairi/react-router";
 
 const user = createPage({
   path: "/users/:user",
   element: function User({ parameters: { user } }) {
     return <h1>User#{user}</h1>;
   },
+});
+
+const { useNavigateToPage } = createRouter({
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [user],
 });
 
 createPage({
@@ -658,200 +707,146 @@ createPage({
 });
 ```
 
-### useLink
+### useIsActivePage
 
-Allow you to navigate to another page using a JSX component instead of a callback as for the `useNavigateToPage` hook.
+Allow you to check if a page is currently active.
 
-The created component is simply a `<a href="...">{children}</a>` under the hood which prevents the default behavior of the navigator which is to create a new HTTP request and to reload the page. The `href` attribute is computed from the page path and its parameters.
-
-```tsx
-import { Fragment } from "react";
-import { createPage, useLink } from "@aminnairi/react-router";
-
-const user = createPage({
-  path: "/users/:user",
-  element: function User({ parameters: { user } }) {
-    return <h1>User#{user}</h1>;
-  },
-});
-
-createPage({
-  path: "/about",
-  element: function About() {
-    const Link = useLink(user);
-
-    return (
-      <Fragment>
-        <h1>About</h1>
-        <Link parameters={{ user: "123" }}>User#123</Link>
-      </Fragment>
-    );
-  },
-});
-```
-
-You can also provide a custom render function as the second argument to fully control the rendered output. This is useful when you want to use a different component library or need more control over the markup.
+Note: This hook is returned from `createRouter`, not imported directly from the library.
 
 ```tsx
 import { Fragment } from "react";
-import { createPage, useLink, UseLinkRenderFunction } from "@aminnairi/react-router";
+import { createPage, createRouter } from "@aminnairi/react-router";
 
-const user = createPage({
-  path: "/users/:user",
-  element: function User({ parameters: { user } }) {
-    return <h1>User#{user}</h1>;
-  },
-});
-
-createPage({
-  path: "/about",
-  element: function About() {
-    const CustomLink = useLink(user, ({ path, onClick, children }) => {
-      return (
-        <button className="nav-button" onClick={onClick}>
-          {children}
-        </button>
-      );
-    });
-
-    return (
-      <Fragment>
-        <h1>About</h1>
-        <CustomLink parameters={{ user: "123" }}>User#123</CustomLink>
-      </Fragment>
-    );
-  },
-});
-```
-
-The render function receives an object with the following properties:
-- `path`: The computed URL path with parameters filled in
-- `onClick`: The click event handler that prevents default navigation and handles routing
-- `children`: The children passed to the link component
-
-### useSearch
-
-Allow you to get one or more search query from the URL.
-
-This will return an instance of the `URLSearchParams` Web API so that you can use you existing knowledge to manipulate the search queries easily.
-
-```tsx
-import { useMemo } from "react";
-import { createPage, useSearch } from "@aminnairi/react-router";
-
-createPage({
-  path: "/users",
+const home = createPage({
+  path: "/",
   element: function Home() {
-    const search = useSearch();
-    const sortedByDate = useMemo(() => search.get("sort-by") === "date", [search]);
-
-    return (
-      <h1>Users</h1>
-      <p>Sorted by date: {sortedByDate ? "yes" : "no"}</p>
-    );
-  }
+    return <h1>Home</h1>;
+  },
 });
-```
 
-You cannot set the search queries for now, this will be added in future release of this library.
+const about = createPage({
+  path: "/about",
+  element: function About() {
+    return <h1>About</h1>;
+  },
+});
 
-### useHash
-
-Allow you to get the hash, also called fragment, from the URL which is everything after the `#` symbol.
-
-```tsx
-import { createPage, useHash } from "@aminnairi/react-router";
+const { useIsActivePage } = createRouter({
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home, about],
+});
 
 createPage({
-  path: "/oauth/callback",
-  element: function OauthCallback() {
-    const token = useHash();
+  path: "/",
+  element: function Home() {
+    const isAboutActive = useIsActivePage(about);
 
-    return <h1>You token is {token}</h1>;
+    return (
+      <Fragment>
+        <h1>Home</h1>
+        <p>About page is {isAboutActive ? "active" : "not active"}</p>
+      </Fragment>
+    );
   },
 });
 ```
 
-## Internal API
+### useLocale
 
-### doesRouteMatchPath
+Allow you to get and set the current locale for internationalization.
 
-Return a boolean in case a route matches a path. A route is a URI that looks something like `/users/:user/articles` and a path is the browser's location pathname that looks something like `/users/123/articles`.
+Note: This hook is returned from `createRouter`, not imported directly from the library.
 
-This function is mainly used in the internals of the `createRouter` and in most case should not be necessary.
+```tsx
+import { Fragment } from "react";
+import { createPage, createRouter } from "@aminnairi/react-router";
 
-```typescript
-import { doesRouteMatchPath } from "@aminnairi/react-router";
+const home = createPage({
+  path: "/",
+  element: function Home() {
+    const { locale, setLocale } = useLocale();
 
-doesRouteMatchPath("/", "/"); // true
+    return (
+      <Fragment>
+        <h1>Home</h1>
+        <p>Current locale: {locale ?? "none"}</p>
+        <button onClick={() => setLocale("en")}>English</button>
+        <button onClick={() => setLocale("fr")}>Français</button>
+      </Fragment>
+    );
+  },
+});
 
-doesRouteMatchPath("/", "/about"); // false
-
-doesRouteMatchPath("/users/:user", "/users/123"); // true
-
-doesRouteMatchPath("/users/:user", "/users/123/articles"); // false
+const { RouterProvider, RouterView, useLocale } = createRouter({
+  locales: ["en", "fr"],
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home],
+});
 ```
 
-You can also optionally provide a prefix.
+### usePrefix
 
-```typescript
-import { doesRouteMatchPath } from "@aminnairi/react-router";
+Allow you to get the current route prefix.
 
-doesRouteMatchPath("/", "/github", "/github"); // true
+Note: This hook is returned from `createRouter`, not imported directly from the library.
 
-doesRouteMatchPath("/", "/github/about", "/github"); // false
+```tsx
+import { Fragment } from "react";
+import { createPage, createRouter } from "@aminnairi/react-router";
 
-doesRouteMatchPath("/users/:user", "/github/users/123", "/github"); // true
+const home = createPage({
+  path: "/",
+  element: function Home() {
+    const { prefix } = usePrefix();
 
-doesRouteMatchPath("/users/:user", "/github/users/123/articles", "/github"); // false
+    return (
+      <Fragment>
+        <h1>Home</h1>
+        <p>Current prefix: {prefix ?? "none"}</p>
+      </Fragment>
+    );
+  },
+});
+
+const { RouterProvider, RouterView, usePrefix } = createRouter({
+  prefix: "/portfolio",
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home],
+});
 ```
 
-### getParameters
+### usePath
 
-Return an object in case a route matches a path, with its dynamic parameters as output. It returns a generic `object` type in case no dynamic parameters are found in the URI. Note that the parameters are always strings, if you need to, convert them to other types explicitely.
+Allow you to get the current path.
 
-This function is mainly used in the internals of the `createRouter` and in most case should not be necessary.
+Note: This hook is returned from `createRouter`, not imported directly from the library.
 
-```typescript
-import { getParameters } from "@aminnairi/react-router";
+```tsx
+import { Fragment } from "react";
+import { createPage, createRouter } from "@aminnairi/react-router";
 
-getParameters("/", "/"); // {}
+const home = createPage({
+  path: "/",
+  element: function Home() {
+    const { path } = usePath();
 
-getParameters("/", "/about"); // {}
+    return (
+      <Fragment>
+        <h1>Home</h1>
+        <p>Current path: {path}</p>
+      </Fragment>
+    );
+  },
+});
 
-getParameters("/users/:user", "/users/123"); // { user: "123" }
-
-getParameters("/users/:user", "/users/123/articles"); // {}
-```
-
-You can also provide an optional prefix.
-
-```typescript
-import { getParameters } from "@aminnairi/react-router";
-
-getParameters("/", "/github", "/github"); // {}
-
-getParameters("/", "/github/about", "/github"); // {}
-
-getParameters("/users/:user", "/github/users/123", "/github"); // { user: "123" }
-
-getParameters("/users/:user", "/github/users/123/articles", "/github"); // {}
-```
-
-### sanitizePath
-
-Internal function that helps normalizing the URL by removing trailing and leading slashes as well as removing any duplicate and unecessary slashes.
-
-```ts
-import { sanitizePath } from "@aminnairi/react-router";
-
-sanitizePath("/"); // "/"
-
-sanitizePath("users"); // "/users"
-
-sanitizePath("users/"); // "/users"
-
-sanitizePath("users//123///articles"); // "/users/123/articles"
+const { RouterProvider, RouterView, usePath } = createRouter({
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home],
+});
 ```
 
 ## Features
@@ -874,7 +869,7 @@ This means that you can use this library with other popular solutions for handli
 
 ### Transition
 
-Support for the View Transition API is built-in and allows for painless and smooth view transition out-of-the-box. You can create your own transition animation, and the library also exports a `slideFadeTransition` ready to be used.
+Support for the View Transition API is built-in and allows for painless and smooth view transition out-of-the-box. You can create your own transition animation, and the library also exports several transitions ready to be used: `slideHorizontalTransition`, `slideVerticalTransition`, `crossFadeTransition`, and `scaleFadeTransition`.
 
 ### Error handling
 
@@ -888,6 +883,7 @@ See [`LICENSE`](./LICENSE).
 
 ### Versions
 
+- [`3.0.0`](#300)
 - [`2.1.0`](#210)
 - [`2.0.1`](#201)
 - [`2.0.0`](#200)
@@ -896,6 +892,31 @@ See [`LICENSE`](./LICENSE).
 - [`1.0.0`](#100)
 - [`0.1.1`](#011)
 - [`0.1.0`](#010)
+
+### 3.0.0
+
+#### Major changes
+
+- Full rewrite of the library implementation
+- Added `locales` support for internationalization
+- Added `useLocale` hook for locale management
+- Added `usePrefix` and `usePath` hooks
+- Renamed `slideFadeTransition` to `slideHorizontalTransition` and added new transitions: `scaleFadeTransition`, `crossFadeTransition`, `slideVerticalTransition`
+- Changed API structure: `router.View` → `router.RouterView` and `router.Provider` → `RouterProvider`
+- Renamed `reset` to `resetError` in `IssueProps`
+- Renamed internal functions: `doesRouteMatchPath` → `matchPath`, `getParameters` → `matchParameters`
+- Added `Uri` class for URL parsing
+- Changed `createRouter` return value structure
+- Removed `useLink`, `useSearch`, and `useHash` hooks and `UseLinkRenderFunction` type
+
+#### Minor changes
+
+- Added better URL normalization with `normalize` function
+- Improved error handling with `ErrorBoundary` component
+
+#### Bug & security fixes
+
+- None.
 
 ### 2.1.0
 
