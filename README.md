@@ -88,8 +88,21 @@ touch src/router/fallback.tsx
 ```
 
 ```tsx
-import { useNavigateToPage } from "@aminnairi/react-router";
-import { home } from "./pages/home";
+import { Fragment } from "react";
+import { createPage, createRouter } from "@aminnairi/react-router";
+
+export const home = createPage({
+  path: "/",
+  element: function Home() {
+    return <h1>Home page</h1>;
+  },
+});
+
+const { useNavigateToPage } = createRouter({
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home],
+});
 
 export const Fallback = () => {
   const navigateToHomePage = useNavigateToPage(home);
@@ -104,8 +117,20 @@ touch src/router/issue.tsx
 
 ```tsx
 import { Fragment } from "react";
-import { useNavigateToPage } from "@aminnairi/react-router";
-import { home } from "./pages/home";
+import { createPage, createRouter } from "@aminnairi/react-router";
+
+export const home = createPage({
+  path: "/",
+  element: function Home() {
+    return <h1>Home page</h1>;
+  },
+});
+
+const { useNavigateToPage } = createRouter({
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home],
+});
 
 export const Issue = () => {
   const navigateToHomePage = useNavigateToPage(home);
@@ -250,17 +275,18 @@ createPage({
 You can navigate from one page from another.
 
 ```tsx
+// router/index.ts
 import { Fragment } from "react";
-import { createPage, useNavigateToPage } from "@aminnairi/react-router";
+import { createPage, createRouter } from "@aminnairi/react-router";
 
-const login = createPage({
+export const login = createPage({
   path: "/login",
   element: function Login() {
     return <h1>Login</h1>;
   },
 });
 
-const about = createPage({
+export const about = createPage({
   path: "/about",
   element: function About() {
     const navigateToLoginPage = useNavigateToPage(login);
@@ -274,7 +300,7 @@ const about = createPage({
   },
 });
 
-createPage({
+export const home = createPage({
   path: "/",
   element: function Home() {
     const navigateToAboutPage = useNavigateToPage(about);
@@ -287,22 +313,29 @@ createPage({
     );
   },
 });
+
+export const { useNavigateToPage } = createRouter({
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home, about, login],
+});
 ```
 
 And you can of course navigate to pages that have dynamic parameters as well.
 
 ```tsx
+// router/index.ts
 import { Fragment } from "react";
-import { createPage, useNavigateToPage } from "@aminnairi/react-router";
+import { createPage, createRouter } from "@aminnairi/react-router";
 
-const user = createPage({
+export const user = createPage({
   path: "/users/:user",
   element: function User({ parameters: { user } }) {
     return <h1>User#{user}</h1>;
   },
 });
 
-createPage({
+export const home = createPage({
   path: "/",
   element: function Home() {
     const navigateToUserPage = useNavigateToPage(user);
@@ -316,6 +349,12 @@ createPage({
       </Fragment>
     );
   },
+});
+
+export const { useNavigateToPage } = createRouter({
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home, user],
 });
 ```
 
@@ -883,6 +922,7 @@ See [`LICENSE`](./LICENSE).
 
 ### Versions
 
+- [`3.0.1`](#301)
 - [`3.0.0`](#300)
 - [`2.1.0`](#210)
 - [`2.0.1`](#201)
@@ -892,6 +932,20 @@ See [`LICENSE`](./LICENSE).
 - [`1.0.0`](#100)
 - [`0.1.1`](#011)
 - [`0.1.0`](#010)
+
+### 3.0.1
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+None.
+
+#### Bug & security fixes
+
+- Fixed incorrect imports in documentation - hooks like `useNavigateToPage`, `useIsActivePage`, `useLocale`, `usePrefix`, and `usePath` are returned from `createRouter` and should not be imported directly from the package
 
 ### 3.0.0
 

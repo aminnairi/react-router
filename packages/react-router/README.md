@@ -88,8 +88,21 @@ touch src/router/fallback.tsx
 ```
 
 ```tsx
-import { useNavigateToPage } from "@aminnairi/react-router";
-import { home } from "./pages/home";
+import { Fragment } from "react";
+import { createPage, createRouter } from "@aminnairi/react-router";
+
+export const home = createPage({
+  path: "/",
+  element: function Home() {
+    return <h1>Home page</h1>;
+  },
+});
+
+const { useNavigateToPage } = createRouter({
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home],
+});
 
 export const Fallback = () => {
   const navigateToHomePage = useNavigateToPage(home);
@@ -104,8 +117,20 @@ touch src/router/issue.tsx
 
 ```tsx
 import { Fragment } from "react";
-import { useNavigateToPage } from "@aminnairi/react-router";
-import { home } from "./pages/home";
+import { createPage, createRouter } from "@aminnairi/react-router";
+
+export const home = createPage({
+  path: "/",
+  element: function Home() {
+    return <h1>Home page</h1>;
+  },
+});
+
+const { useNavigateToPage } = createRouter({
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [home],
+});
 
 export const Issue = () => {
   const navigateToHomePage = useNavigateToPage(home);
@@ -301,13 +326,19 @@ And you can of course navigate to pages that have dynamic parameters as well.
 
 ```tsx
 import { Fragment } from "react";
-import { createPage, useNavigateToPage } from "@aminnairi/react-router";
+import { createPage, createRouter } from "@aminnairi/react-router";
 
 const user = createPage({
   path: "/users/:user",
   element: function User({ parameters: { user } }) {
     return <h1>User#{user}</h1>;
   },
+});
+
+const { useNavigateToPage } = createRouter({
+  fallback: () => <h1>Not found</h1>,
+  issue: () => <h1>An error occurred</h1>,
+  pages: [user],
 });
 
 createPage({
@@ -570,7 +601,6 @@ import { createRoot } from "react-dom/client";
 import {
   createRouter,
   createPage,
-  useNavigateToPage,
 } from "@aminnairi/react-router";
 
 const home = createPage({
@@ -599,7 +629,7 @@ const Issue = ({ error, resetError }: { error: Error; resetError: () => void }) 
   </Fragment>
 );
 
-const { RouterProvider, RouterView } = createRouter({
+const { RouterProvider, RouterView, useNavigateToPage } = createRouter({
   prefix: "/portfolio",
   fallback: Fallback,
   issue: Issue,
@@ -716,42 +746,53 @@ Allow you to check if a page is currently active.
 Note: This hook is returned from `createRouter`, not imported directly from the library.
 
 ```tsx
-import { Fragment } from "react";
+// router/index.ts
 import { createPage, createRouter } from "@aminnairi/react-router";
 
-const home = createPage({
+export const home = createPage({
   path: "/",
   element: function Home() {
     return <h1>Home</h1>;
   },
 });
 
-const about = createPage({
+export const about = createPage({
   path: "/about",
   element: function About() {
     return <h1>About</h1>;
   },
 });
 
-const { useIsActivePage } = createRouter({
+export const { useIsActivePage } = createRouter({
   fallback: () => <h1>Not found</h1>,
   issue: () => <h1>An error occurred</h1>,
   pages: [home, about],
 });
+```
 
-createPage({
-  path: "/",
-  element: function Home() {
-    const isAboutActive = useIsActivePage(about);
+```tsx
+// components/layout.tsx
+import { Fragment } from "react";
+import { useIsActivePage, useNavigateToPage } from "../router";
+import { home, about } from "../router";
 
-    return (
-      <Fragment>
-        <h1>Home</h1>
-        <p>About page is {isAboutActive ? "active" : "not active"}</p>
-      </Fragment>
-    );
-  },
-});
+export default function Layout() {
+  const isHomeActive = useIsActivePage(home);
+  const isAboutActive = useIsActivePage(about);
+
+  return (
+    <Fragment>
+      <nav>
+        <button style={{ fontWeight: isHomeActive ? "bold" : "normal" }}>
+          Home
+        </button>
+        <button style={{ fontWeight: isAboutActive ? "bold" : "normal" }}>
+          About
+        </button>
+      </nav>
+    </Fragment>
+  );
+}
 ```
 
 ### useLocale
@@ -761,31 +802,42 @@ Allow you to get and set the current locale for internationalization.
 Note: This hook is returned from `createRouter`, not imported directly from the library.
 
 ```tsx
-import { Fragment } from "react";
+// router/index.ts
 import { createPage, createRouter } from "@aminnairi/react-router";
 
-const home = createPage({
+export const home = createPage({
   path: "/",
   element: function Home() {
-    const { locale, setLocale } = useLocale();
-
-    return (
-      <Fragment>
-        <h1>Home</h1>
-        <p>Current locale: {locale ?? "none"}</p>
-        <button onClick={() => setLocale("en")}>English</button>
-        <button onClick={() => setLocale("fr")}>Français</button>
-      </Fragment>
-    );
+    return <h1>Home</h1>;
   },
 });
 
-const { RouterProvider, RouterView, useLocale } = createRouter({
+export const { RouterProvider, RouterView, useLocale } = createRouter({
   locales: ["en", "fr"],
   fallback: () => <h1>Not found</h1>,
   issue: () => <h1>An error occurred</h1>,
   pages: [home],
 });
+```
+
+```tsx
+// components/layout.tsx
+import { Fragment } from "react";
+import { useLocale } from "../router";
+
+export default function Layout() {
+  const { locale, setLocale } = useLocale();
+
+  return (
+    <Fragment>
+      <nav>
+        <p>Current locale: {locale ?? "none"}</p>
+        <button onClick={() => setLocale("en")}>English</button>
+        <button onClick={() => setLocale("fr")}>Français</button>
+      </nav>
+    </Fragment>
+  );
+}
 ```
 
 ### usePrefix
@@ -795,29 +847,40 @@ Allow you to get the current route prefix.
 Note: This hook is returned from `createRouter`, not imported directly from the library.
 
 ```tsx
-import { Fragment } from "react";
+// router/index.ts
 import { createPage, createRouter } from "@aminnairi/react-router";
 
-const home = createPage({
+export const home = createPage({
   path: "/",
   element: function Home() {
-    const { prefix } = usePrefix();
-
-    return (
-      <Fragment>
-        <h1>Home</h1>
-        <p>Current prefix: {prefix ?? "none"}</p>
-      </Fragment>
-    );
+    return <h1>Home</h1>;
   },
 });
 
-const { RouterProvider, RouterView, usePrefix } = createRouter({
+export const { RouterProvider, RouterView, usePrefix } = createRouter({
   prefix: "/portfolio",
   fallback: () => <h1>Not found</h1>,
   issue: () => <h1>An error occurred</h1>,
   pages: [home],
 });
+```
+
+```tsx
+// components/layout.tsx
+import { Fragment } from "react";
+import { usePrefix } from "../router";
+
+export default function Layout() {
+  const { prefix } = usePrefix();
+
+  return (
+    <Fragment>
+      <nav>
+        <p>Current prefix: {prefix ?? "none"}</p>
+      </nav>
+    </Fragment>
+  );
+}
 ```
 
 ### usePath
@@ -827,28 +890,39 @@ Allow you to get the current path.
 Note: This hook is returned from `createRouter`, not imported directly from the library.
 
 ```tsx
-import { Fragment } from "react";
+// router/index.ts
 import { createPage, createRouter } from "@aminnairi/react-router";
 
-const home = createPage({
+export const home = createPage({
   path: "/",
   element: function Home() {
-    const { path } = usePath();
-
-    return (
-      <Fragment>
-        <h1>Home</h1>
-        <p>Current path: {path}</p>
-      </Fragment>
-    );
+    return <h1>Home</h1>;
   },
 });
 
-const { RouterProvider, RouterView, usePath } = createRouter({
+export const { RouterProvider, RouterView, usePath } = createRouter({
   fallback: () => <h1>Not found</h1>,
   issue: () => <h1>An error occurred</h1>,
   pages: [home],
 });
+```
+
+```tsx
+// components/layout.tsx
+import { Fragment } from "react";
+import { usePath } from "../router";
+
+export default function Layout() {
+  const { path } = usePath();
+
+  return (
+    <Fragment>
+      <nav>
+        <p>Current path: {path}</p>
+      </nav>
+    </Fragment>
+  );
+}
 ```
 
 ## Features
@@ -885,6 +959,7 @@ See [`LICENSE`](./LICENSE).
 
 ### Versions
 
+- [`3.0.1`](#301)
 - [`3.0.0`](#300)
 - [`2.1.0`](#210)
 - [`2.0.1`](#201)
@@ -894,6 +969,20 @@ See [`LICENSE`](./LICENSE).
 - [`1.0.0`](#100)
 - [`0.1.1`](#011)
 - [`0.1.0`](#010)
+
+### 3.0.1
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+None.
+
+#### Bug & security fixes
+
+- Fixed incorrect imports in documentation - hooks like `useNavigateToPage`, `useIsActivePage`, `useLocale`, `usePrefix`, and `usePath` are returned from `createRouter` and should not be imported directly from the package
 
 ### 3.0.0
 
