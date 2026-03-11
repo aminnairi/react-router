@@ -1,9 +1,15 @@
 {
+  "include": [
+    "index.tsx"
+  ],
   "compilerOptions": {
+    "outDir": "dist",
     "jsx": "react-jsx",
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "node",
+    "emitDeclarationOnly": true,
+    "declaration": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
@@ -11,6 +17,7 @@
     "noImplicitOverride": true,
     "exactOptionalPropertyTypes": true,
     "esModuleInterop": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "skipLibCheck": true
   }
 }
