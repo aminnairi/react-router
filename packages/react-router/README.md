@@ -935,6 +935,7 @@ See [`LICENSE`](./LICENSE).
 
 ### Versions
 
+- [`3.0.2`](#302)
 - [`3.0.1`](#301)
 - [`3.0.0`](#300)
 - [`2.1.0`](#210)
@@ -945,6 +946,20 @@ See [`LICENSE`](./LICENSE).
 - [`1.0.0`](#100)
 - [`0.1.1`](#011)
 - [`0.1.0`](#010)
+
+### 3.0.2
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+None.
+
+#### Bug & security fixes
+
+- Fixed the output file path in the rolldown configuration (changed from `dist/index.ts` to `dist/index.js`)
 
 ### 3.0.1
 
