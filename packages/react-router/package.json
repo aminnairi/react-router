@@ -32,13 +32,14 @@
     "history"
   ],
   "peerDependencies": {
-    "react": ">=18.0.0"
+    "react": "^19.2.4"
   },
   "scripts": {
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "build": "tsc && rolldown --config rolldown.config.ts"
   },
   "devDependencies": {
+    "@types/react": "^19.2.14",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
     "eslint": "^8.57.0",
