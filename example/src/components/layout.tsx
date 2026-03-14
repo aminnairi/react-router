@@ -25,7 +25,7 @@ export default function Layout({ children }: LayoutProps) {
           <Typography variant="h6" flex="1">
             React Router
           </Typography>
-          <Button onClick={() => navigateToUserPage({ user: "123" })} variant={isUserPageActive ? "outlined" : undefined} color="inherit">
+          <Button onClick={() => navigateToUserPage({ userIdentifier: "123" })} variant={isUserPageActive ? "outlined" : undefined} color="inherit">
             User#123
           </Button>
           <Button onClick={navigateToAboutPage} variant={isAboutPageActive ? "outlined" : undefined} color="inherit">
