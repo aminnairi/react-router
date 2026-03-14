@@ -898,6 +898,7 @@ See [`LICENSE`](./LICENSE).
 
 ### Versions
 
+- [`4.0.0`](#400)
 - [`3.0.2`](#302)
 - [`3.0.1`](#301)
 - [`3.0.0`](#300)
@@ -909,6 +910,20 @@ See [`LICENSE`](./LICENSE).
 - [`1.0.0`](#100)
 - [`0.1.1`](#011)
 - [`0.1.0`](#010)
+
+### 4.0.0
+
+#### Major changes
+
+- Externalized React from the build output to prevent hooks mismatch issues with consumer applications. Consumers are now required to have React as a dependency in their project.
+
+#### Minor changes
+
+- Explicitly set the build output format to ESM.
+
+#### Bug & security fixes
+
+- Fixed lint error in the source code dependencies.
 
 ### 3.0.2
 
