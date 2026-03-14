@@ -15,12 +15,12 @@ jobs:
         with:
           node-version: 25.7.0
           cache: "npm"
-          cache-dependency-path: packages/react-router/package-lock.json
 
       - name: Install dependencies
         run: npm install
-        working-directory: packages/react-router
 
       - name: Lint
-        run: npm run lint
-        working-directory: packages/react-router
+        run: npm -w packages/react-router run lint
+
+      - name: Build
+        run: npm -w packages/react-router run build
