@@ -419,7 +419,7 @@ export function createRouter<Locale extends string = never, Path extends string 
   }
 
   function RouterProvider({ children }: RouterProviderProps) {
-    const uri = useMemo(() => Uri.from(window.location.pathname, expectedPrefix, locales), [expectedPrefix, locales]);
+    const uri = useMemo(() => Uri.from(window.location.pathname, expectedPrefix, locales), []);
     const [locale, setLocale] = useState(uri.locale);
     const [path, setPath] = useState(uri.path);
     const [prefix, setPrefix] = useState(uri.prefix);
@@ -482,7 +482,7 @@ export function createRouter<Locale extends string = never, Path extends string 
       return () => {
         abortController.abort();
       };
-    }, []);
+    }, [onMount, onNavigation]);
 
     return (
       <RouterContext.Provider value={value}>
@@ -498,7 +498,7 @@ export function createRouter<Locale extends string = never, Path extends string 
       return pages.find(page => {
         return matchPath(page.path, path);
       });
-    }, [path, pages]);
+    }, [path]);
 
     if (foundPage) {
       return (
