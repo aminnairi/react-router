@@ -29,6 +29,8 @@ Type-safe router for the React library
 - [Contributing](../CONTRIBUTING.md)
 - [Changelogs](#changelogs)
   - [Versions](#versions)
+  - [4.0.1](#401)
+  - [4.0.0](#400)
   - [3.0.0](#300)
   - [2.1.0](#210)
   - [2.0.1](#201)
@@ -936,6 +938,7 @@ See [`LICENSE`](./LICENSE).
 
 ### Versions
 
+- [`4.0.1`](#401)
 - [`4.0.0`](#400)
 - [`3.0.2`](#302)
 - [`3.0.1`](#301)
@@ -962,6 +965,20 @@ See [`LICENSE`](./LICENSE).
 #### Bug & security fixes
 
 - Fixed lint error in the source code dependencies.
+
+### 4.0.1
+
+#### Major changes
+
+None.
+
+#### Minor changes
+
+None.
+
+#### Bug & security fixes
+
+- Fixed path normalization to preserve case-sensitivity in dynamic path segments (e.g., `/users/:userIdentifier`).
 
 ### 3.0.2
 
