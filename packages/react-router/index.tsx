@@ -27,10 +27,9 @@ export interface RouterContextInterface<Locale> {
 
 export type NavigationDirection = "forward" | "backward";
 
-function normalize(uri: string) {
+export function normalize(uri: string) {
   return uri
     .trim()
-    .toLowerCase()
     .replace(/\/+/g, "/")
     .replace(/^\/+|\/$/g, "");
 }
