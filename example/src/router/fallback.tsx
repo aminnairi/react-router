@@ -20,7 +20,7 @@ export const Fallback = () => {
         <Button variant="contained" sx={{ alignSelf: "center" }} onClick={navigateToHomePage}>
           Home
         </Button>
-        <Button variant="contained" sx={{ alignSelf: "center" }} onClick={() => navigateToUserPage({ user: "123" })}>
+        <Button variant="contained" sx={{ alignSelf: "center" }} onClick={() => navigateToUserPage({ userIdentifier: "123" })}>
           Navigate to users page
         </Button>
       </Stack>
