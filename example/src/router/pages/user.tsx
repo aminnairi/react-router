@@ -8,7 +8,7 @@ import { useNavigateToPage } from "..";
 import Layout from "../../components/layout";
 
 export const user = createPage({
-  path: "/users/:user",
+  path: "/users/:userIdentifier",
   element: function UserPage({ parameters }) {
     const navigateToHomePage = useNavigateToPage(home);
 
@@ -16,7 +16,7 @@ export const user = createPage({
       <Layout>
         <Stack spacing={3}>
           <Typography variant="h2" align="center">
-            User #{parameters.user}
+            User #{parameters.userIdentifier}
           </Typography>
           <Button variant="contained" sx={{ alignSelf: "center" }} onClick={navigateToHomePage}>
             Home
