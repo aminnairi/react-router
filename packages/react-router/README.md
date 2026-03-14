@@ -26,6 +26,7 @@ Type-safe router for the React library
   - [Transition](#transition)
   - [Error handling](#error-handling)
 - [License](#license)
+- [Contributing](../CONTRIBUTING.md)
 - [Changelogs](#changelogs)
   - [Versions](#versions)
   - [3.0.0](#300)
