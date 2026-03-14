@@ -406,7 +406,7 @@ export function createRouter<Locale extends string = never, Path extends string 
 
     return useCallback((...[params]: ExtractParams<P> extends never ? [] : [Params<P>]) => {
       const path = Object.entries(params ?? {}).reduce<string>((oldParams, [name, value]) => {
-        return oldParams.replace(`:${name}`, String(value));
+        return oldParams.replace(new RegExp(`:${name}`, "g"), String(value));
       }, page.path);
 
       const pathname = `/${normalize(`${prefix ?? ""}/${locale ?? ""}/${path}`)}`
