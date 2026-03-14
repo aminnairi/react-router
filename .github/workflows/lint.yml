@@ -24,3 +24,6 @@ jobs:
 
       - name: Build
         run: npm -w packages/react-router run build
+
+      - name: Test
+        run: npm -w packages/react-router test
