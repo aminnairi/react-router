@@ -24,7 +24,7 @@ export const about = createPage({
             Home
           </Button>
           <Typography>
-            Or go to the <Button onClick={() => navigateToUserPage({ user: "123" })}>User#123</Button>
+            Or go to the <Button onClick={() => navigateToUserPage({ userIdentifier: "123" })}>User#123</Button>
           </Typography>
         </Stack>
       </Layout>
